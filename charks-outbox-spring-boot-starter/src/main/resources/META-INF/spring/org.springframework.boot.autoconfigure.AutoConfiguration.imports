@@ -1,0 +1,4 @@
+xyz.charks.outbox.spring.OutboxAutoConfiguration
+xyz.charks.outbox.spring.OutboxAutoConfiguration$JsonSerializerAutoConfiguration
+xyz.charks.outbox.spring.OutboxAutoConfiguration$KafkaConnectorAutoConfiguration
+xyz.charks.outbox.spring.OutboxAutoConfiguration$RelayAutoConfiguration
