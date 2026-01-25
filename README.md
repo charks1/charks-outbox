@@ -1,7 +1,7 @@
 # Charks Outbox
 
-[![CI](https://github.com/charks/charks-outbox/actions/workflows/ci.yml/badge.svg)](https://github.com/charks/charks-outbox/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/charks/charks-outbox/branch/main/graph/badge.svg)](https://codecov.io/gh/charks/charks-outbox)
+[![CI](https://github.com/charks1/charks-outbox/actions/workflows/ci.yml/badge.svg)](https://github.com/charks1/charks-outbox/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/charks1/charks-outbox/branch/main/graph/badge.svg)](https://codecov.io/gh/charks1/charks-outbox)
 [![Maven Central](https://img.shields.io/maven-central/v/xyz.charks/charks-outbox-core.svg)](https://central.sonatype.com/artifact/xyz.charks/charks-outbox-core)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Java](https://img.shields.io/badge/Java-25-orange.svg)](https://openjdk.org/projects/jdk/25/)
