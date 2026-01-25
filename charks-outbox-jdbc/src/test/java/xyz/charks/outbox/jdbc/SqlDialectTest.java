@@ -1,0 +1,188 @@
+package xyz.charks.outbox.jdbc;
+
+import xyz.charks.outbox.core.LockMode;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+@DisplayName("SqlDialect")
+class SqlDialectTest {
+
+    @Nested
+    @DisplayName("PostgreSQL dialect")
+    class PostgreSqlDialectTest {
+
+        private final SqlDialect dialect = SqlDialect.POSTGRESQL;
+
+        @Test
+        @DisplayName("returns FOR UPDATE clause for FOR_UPDATE lock mode")
+        void lockClauseForUpdate() {
+            assertThat(dialect.lockClause(LockMode.FOR_UPDATE)).isEqualTo(" FOR UPDATE");
+        }
+
+        @Test
+        @DisplayName("returns FOR UPDATE SKIP LOCKED clause")
+        void lockClauseSkipLocked() {
+            assertThat(dialect.lockClause(LockMode.FOR_UPDATE_SKIP_LOCKED))
+                    .isEqualTo(" FOR UPDATE SKIP LOCKED");
+        }
+
+        @Test
+        @DisplayName("returns empty string for NONE lock mode")
+        void lockClauseNone() {
+            assertThat(dialect.lockClause(LockMode.NONE)).isEmpty();
+        }
+
+        @Test
+        @DisplayName("returns LIMIT clause")
+        void limitClause() {
+            assertThat(dialect.limitClause(50)).isEqualTo(" LIMIT 50");
+        }
+
+        @Test
+        @DisplayName("returns correct SQL types")
+        void sqlTypes() {
+            assertThat(dialect.uuidType()).isEqualTo("UUID");
+            assertThat(dialect.binaryType()).isEqualTo("BYTEA");
+            assertThat(dialect.jsonType()).isEqualTo("JSONB");
+            assertThat(dialect.timestampType()).isEqualTo("TIMESTAMP WITH TIME ZONE");
+        }
+
+        @Test
+        @DisplayName("supports SKIP LOCKED")
+        void supportsSkipLocked() {
+            assertThat(dialect.supportsSkipLocked()).isTrue();
+        }
+    }
+
+    @Nested
+    @DisplayName("MySQL dialect")
+    class MySqlDialectTest {
+
+        private final SqlDialect dialect = SqlDialect.MYSQL;
+
+        @Test
+        @DisplayName("returns FOR UPDATE clause for FOR_UPDATE lock mode")
+        void lockClauseForUpdate() {
+            assertThat(dialect.lockClause(LockMode.FOR_UPDATE)).isEqualTo(" FOR UPDATE");
+        }
+
+        @Test
+        @DisplayName("returns FOR UPDATE SKIP LOCKED clause")
+        void lockClauseSkipLocked() {
+            assertThat(dialect.lockClause(LockMode.FOR_UPDATE_SKIP_LOCKED))
+                    .isEqualTo(" FOR UPDATE SKIP LOCKED");
+        }
+
+        @Test
+        @DisplayName("returns correct SQL types")
+        void sqlTypes() {
+            assertThat(dialect.uuidType()).isEqualTo("VARCHAR(36)");
+            assertThat(dialect.binaryType()).isEqualTo("LONGBLOB");
+            assertThat(dialect.jsonType()).isEqualTo("JSON");
+            assertThat(dialect.timestampType()).isEqualTo("TIMESTAMP(6)");
+        }
+
+        @Test
+        @DisplayName("supports SKIP LOCKED")
+        void supportsSkipLocked() {
+            assertThat(dialect.supportsSkipLocked()).isTrue();
+        }
+    }
+
+    @Nested
+    @DisplayName("H2 dialect")
+    class H2DialectTest {
+
+        private final SqlDialect dialect = SqlDialect.H2;
+
+        @Test
+        @DisplayName("returns FOR UPDATE for both lock modes")
+        void lockClauseFallback() {
+            assertThat(dialect.lockClause(LockMode.FOR_UPDATE)).isEqualTo(" FOR UPDATE");
+            assertThat(dialect.lockClause(LockMode.FOR_UPDATE_SKIP_LOCKED)).isEqualTo(" FOR UPDATE");
+        }
+
+        @Test
+        @DisplayName("returns correct SQL types")
+        void sqlTypes() {
+            assertThat(dialect.uuidType()).isEqualTo("UUID");
+            assertThat(dialect.binaryType()).isEqualTo("BYTEA");
+            assertThat(dialect.jsonType()).isEqualTo("VARCHAR");
+            assertThat(dialect.timestampType()).isEqualTo("TIMESTAMP WITH TIME ZONE");
+        }
+
+        @Test
+        @DisplayName("does not support SKIP LOCKED")
+        void supportsSkipLocked() {
+            assertThat(dialect.supportsSkipLocked()).isFalse();
+        }
+    }
+
+    @Nested
+    @DisplayName("fromJdbcUrl")
+    class FromJdbcUrlTest {
+
+        @ParameterizedTest
+        @ValueSource(strings = {
+                "jdbc:postgresql://localhost:5432/mydb",
+                "jdbc:postgresql://host/db?ssl=true",
+                "jdbc:pgsql://localhost/test"
+        })
+        @DisplayName("detects PostgreSQL from JDBC URL")
+        void detectPostgresql(String url) {
+            assertThat(SqlDialect.fromJdbcUrl(url)).isEqualTo(SqlDialect.POSTGRESQL);
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {
+                "jdbc:mysql://localhost:3306/mydb",
+                "jdbc:mariadb://localhost:3306/mydb"
+        })
+        @DisplayName("detects MySQL/MariaDB from JDBC URL")
+        void detectMysql(String url) {
+            assertThat(SqlDialect.fromJdbcUrl(url)).isEqualTo(SqlDialect.MYSQL);
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {
+                "jdbc:h2:mem:testdb",
+                "jdbc:h2:file:/data/sample",
+                "jdbc:h2:tcp://localhost/~/test"
+        })
+        @DisplayName("detects H2 from JDBC URL")
+        void detectH2(String url) {
+            assertThat(SqlDialect.fromJdbcUrl(url)).isEqualTo(SqlDialect.H2);
+        }
+
+        @Test
+        @DisplayName("throws exception for unsupported database")
+        void unsupportedDatabase() {
+            assertThatThrownBy(() -> SqlDialect.fromJdbcUrl("jdbc:oracle:thin:@localhost:1521:xe"))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Unsupported database");
+        }
+
+        @Test
+        @DisplayName("throws exception for null URL")
+        void nullUrl() {
+            assertThatThrownBy(() -> SqlDialect.fromJdbcUrl(null))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("cannot be null");
+        }
+
+        @Test
+        @DisplayName("throws exception for blank URL")
+        void blankUrl() {
+            assertThatThrownBy(() -> SqlDialect.fromJdbcUrl("  "))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("cannot be null or blank");
+        }
+    }
+}
