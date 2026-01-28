@@ -54,4 +54,31 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>io.github.ascopes</groupId>
+                <artifactId>protobuf-maven-plugin</artifactId>
+                <version>2.7.2</version>
+                <configuration>
+                    <protocVersion>${protobuf.version}</protocVersion>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>generate-test-sources</id>
+                        <phase>generate-test-sources</phase>
+                        <goals>
+                            <goal>generate-test</goal>
+                        </goals>
+                        <configuration>
+                            <sourceDirectories>
+                                <sourceDirectory>${project.basedir}/src/test/proto</sourceDirectory>
+                            </sourceDirectories>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
 </project>

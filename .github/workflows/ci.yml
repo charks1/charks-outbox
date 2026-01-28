@@ -22,8 +22,8 @@ jobs:
           java-version: '25'
           cache: 'maven'
 
-      - name: Build and test with coverage
-        run: mvn clean verify -B -Pcoverage
+      - name: Build and test
+        run: mvn clean verify -B
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
