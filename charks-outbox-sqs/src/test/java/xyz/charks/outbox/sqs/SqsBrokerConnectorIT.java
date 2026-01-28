@@ -16,6 +16,7 @@ import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.CreateQueueRequest;
 import software.amazon.awssdk.services.sqs.model.DeleteQueueRequest;
 import software.amazon.awssdk.services.sqs.model.Message;
+import software.amazon.awssdk.services.sqs.model.QueueAttributeName;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 import xyz.charks.outbox.broker.PublishResult;
 import xyz.charks.outbox.core.AggregateId;
@@ -169,8 +170,8 @@ class SqsBrokerConnectorIT {
             String fifoQueueUrl = sqsClient.createQueue(CreateQueueRequest.builder()
                     .queueName(fifoQueueName)
                     .attributes(Map.of(
-                            "FifoQueue", "true",
-                            "ContentBasedDeduplication", "false"
+                            QueueAttributeName.FIFO_QUEUE, "true",
+                            QueueAttributeName.CONTENT_BASED_DEDUPLICATION, "false"
                     ))
                     .build()).queueUrl();
 
