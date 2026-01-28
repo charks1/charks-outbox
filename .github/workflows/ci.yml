@@ -57,7 +57,7 @@ jobs:
           cache: 'maven'
 
       - name: Run integration tests
-        run: mvn verify -B -Pintegration-tests -DskipTests
+        run: mvn verify -B -Pintegration-tests
 
       - name: Upload IT test results
         if: failure()
