@@ -343,7 +343,7 @@ class R2dbcOutboxRepositoryIT {
             OutboxEvent found = repository.findById(event.id()).orElseThrow();
             assertThat(found.status()).isInstanceOf(Failed.class);
             Failed failed = (Failed) found.status();
-            assertThat(failed.lastError()).isEqualTo("Connection timeout");
+            assertThat(failed.error()).isEqualTo("Connection timeout");
         }
 
         @Test
