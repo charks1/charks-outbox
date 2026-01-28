@@ -116,8 +116,8 @@ public final class JdbcOutboxRepository implements OutboxRepository {
                     id, aggregate_type, aggregate_id, event_type, topic,
                     partition_key, payload, headers, created_at, status,
                     retry_count, last_error, processed_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """.formatted(tableName);
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, %s, ?, ?, ?, ?, ?)
+                """.formatted(tableName, dialect.jsonPlaceholder());
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -145,8 +145,8 @@ public final class JdbcOutboxRepository implements OutboxRepository {
                     id, aggregate_type, aggregate_id, event_type, topic,
                     partition_key, payload, headers, created_at, status,
                     retry_count, last_error, processed_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """.formatted(tableName);
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, %s, ?, ?, ?, ?, ?)
+                """.formatted(tableName, dialect.jsonPlaceholder());
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -218,11 +218,11 @@ public final class JdbcOutboxRepository implements OutboxRepository {
         String sql = """
                 UPDATE %s SET
                     aggregate_type = ?, aggregate_id = ?, event_type = ?,
-                    topic = ?, partition_key = ?, payload = ?, headers = ?,
+                    topic = ?, partition_key = ?, payload = ?, headers = %s,
                     created_at = ?, status = ?, retry_count = ?,
                     last_error = ?, processed_at = ?
                 WHERE id = ?
-                """.formatted(tableName);
+                """.formatted(tableName, dialect.jsonPlaceholder());
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {

@@ -69,6 +69,11 @@ public enum SqlDialect {
         }
 
         @Override
+        public String jsonPlaceholder() {
+            return "?::jsonb";
+        }
+
+        @Override
         public boolean supportsSkipLocked() {
             return true;
         }
@@ -121,6 +126,11 @@ public enum SqlDialect {
         }
 
         @Override
+        public String jsonPlaceholder() {
+            return "?";
+        }
+
+        @Override
         public boolean supportsSkipLocked() {
             return true;
         }
@@ -164,6 +174,11 @@ public enum SqlDialect {
         @Override
         public String timestampType() {
             return "TIMESTAMP WITH TIME ZONE";
+        }
+
+        @Override
+        public String jsonPlaceholder() {
+            return "?";
         }
 
         @Override
@@ -215,6 +230,16 @@ public enum SqlDialect {
      * @return the database-specific timestamp type
      */
     public abstract String timestampType();
+
+    /**
+     * Returns the SQL placeholder for JSON values.
+     *
+     * <p>PostgreSQL requires explicit cast to JSONB, while MySQL and H2
+     * accept plain parameter placeholders.
+     *
+     * @return the database-specific JSON placeholder (e.g., "?::jsonb" for PostgreSQL)
+     */
+    public abstract String jsonPlaceholder();
 
     /**
      * Indicates whether this dialect supports SKIP LOCKED.
