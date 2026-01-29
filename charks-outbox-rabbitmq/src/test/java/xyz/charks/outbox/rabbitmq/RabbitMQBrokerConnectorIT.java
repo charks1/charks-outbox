@@ -137,6 +137,7 @@ class RabbitMQBrokerConnectorIT {
             assertThat(headers.get("aggregateType").toString()).isEqualTo("Order");
             assertThat(headers.get("aggregateId").toString()).isEqualTo("order-123");
             assertThat(headers.get("eventType").toString()).isEqualTo("OrderCreated");
+            assertThat(headers.get("createdAt").toString()).isEqualTo(event.createdAt().toString());
             assertThat(headers.get("traceId").toString()).isEqualTo("trace-abc");
             assertThat(props.getMessageId()).isEqualTo(event.id().value().toString());
         }

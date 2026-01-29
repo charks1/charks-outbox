@@ -155,6 +155,7 @@ class SqsBrokerConnectorIT {
             assertThat(attrs.get("aggregateType").stringValue()).isEqualTo("Order");
             assertThat(attrs.get("aggregateId").stringValue()).isEqualTo("order-123");
             assertThat(attrs.get("eventType").stringValue()).isEqualTo("OrderCreated");
+            assertThat(attrs.get("createdAt").stringValue()).isEqualTo(event.createdAt().toString());
             assertThat(attrs.get("traceId").stringValue()).isEqualTo("trace-abc");
         }
     }

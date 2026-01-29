@@ -150,6 +150,7 @@ class NatsBrokerConnectorIT {
             assertThat(message.getHeaders().getFirst("aggregateType")).isEqualTo(aggregateType);
             assertThat(message.getHeaders().getFirst("aggregateId")).isEqualTo("pay-456");
             assertThat(message.getHeaders().getFirst("eventType")).isEqualTo(eventType);
+            assertThat(message.getHeaders().getFirst("createdAt")).isEqualTo(event.createdAt().toString());
             assertThat(message.getHeaders().getFirst("traceId")).isEqualTo("trace-abc");
             assertThat(message.getHeaders().getFirst("correlationId")).isEqualTo("corr-xyz");
 

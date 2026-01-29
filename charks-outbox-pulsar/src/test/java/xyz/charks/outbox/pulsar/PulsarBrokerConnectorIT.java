@@ -153,6 +153,7 @@ class PulsarBrokerConnectorIT {
             assertThat(message.getProperty("aggregateType")).isEqualTo(aggregateType);
             assertThat(message.getProperty("aggregateId")).isEqualTo("pay-456");
             assertThat(message.getProperty("eventType")).isEqualTo("PaymentReceived");
+            assertThat(message.getProperty("createdAt")).isEqualTo(event.createdAt().toString());
             assertThat(message.getProperty("traceId")).isEqualTo("trace-abc");
             assertThat(message.getProperty("correlationId")).isEqualTo("corr-xyz");
 

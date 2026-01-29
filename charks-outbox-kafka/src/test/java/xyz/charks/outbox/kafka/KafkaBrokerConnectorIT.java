@@ -141,6 +141,7 @@ class KafkaBrokerConnectorIT {
             assertThat(getHeader(record, "outbox-event-type")).isEqualTo("OrderCreated");
             assertThat(getHeader(record, "outbox-aggregate-type")).isEqualTo("Order");
             assertThat(getHeader(record, "outbox-aggregate-id")).isEqualTo("order-123");
+            assertThat(getHeader(record, "outbox-created-at")).isEqualTo(event.createdAt().toString());
             assertThat(getHeader(record, "traceId")).isEqualTo("trace-abc");
             assertThat(getHeader(record, "correlationId")).isEqualTo("corr-xyz");
         }
