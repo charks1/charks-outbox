@@ -129,9 +129,30 @@ public class MongoOutboxRepository implements OutboxRepository {
             return 0;
         }
         List<String> idStrings = ids.stream().map(id -> id.value().toString()).toList();
+
+        Document updateFields = new Document(FIELD_STATUS, status.name());
+
+        switch (status) {
+            case Failed f -> {
+                updateFields.append(FIELD_LAST_ERROR, f.error());
+                updateFields.append(FIELD_RETRY_COUNT, f.attemptCount());
+                updateFields.append(FIELD_PROCESSED_AT, Date.from(f.failedAt()));
+            }
+            case Published p -> {
+                updateFields.append(FIELD_PROCESSED_AT, Date.from(p.publishedAt()));
+            }
+            case Archived a -> {
+                updateFields.append(FIELD_PROCESSED_AT, Date.from(a.archivedAt()));
+                updateFields.append(FIELD_LAST_ERROR, a.reason());
+            }
+            default -> {
+                // Pending: no additional fields
+            }
+        }
+
         var result = collection.updateMany(
             Filters.in(FIELD_ID, idStrings),
-            new Document("$set", new Document(FIELD_STATUS, status.name()))
+            new Document("$set", updateFields)
         );
         LOG.debug("Updated status to {} for {} events", status.name(), result.getModifiedCount());
         return (int) result.getModifiedCount();

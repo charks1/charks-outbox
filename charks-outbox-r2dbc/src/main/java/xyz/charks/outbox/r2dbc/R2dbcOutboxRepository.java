@@ -278,9 +278,8 @@ public class R2dbcOutboxRepository implements OutboxRepository {
 
         int totalUpdated = 0;
         for (OutboxEventId id : ids) {
-            String sql = "UPDATE %s SET status = $1 WHERE id = $2".formatted(tableName);
             Long updated = Mono.from(connectionFactory.create())
-                    .flatMap(conn -> executeStatusUpdate(conn, sql, status, id))
+                    .flatMap(conn -> executeStatusUpdate(conn, status, id))
                     .block();
             if (updated != null) {
                 totalUpdated += updated.intValue();
@@ -289,10 +288,43 @@ public class R2dbcOutboxRepository implements OutboxRepository {
         return totalUpdated;
     }
 
-    private Mono<Long> executeStatusUpdate(Connection conn, String sql, OutboxStatus status, OutboxEventId id) {
-        Statement stmt = conn.createStatement(sql)
-                .bind("$1", status.name())
-                .bind("$2", id.value());
+    private Mono<Long> executeStatusUpdate(Connection conn, OutboxStatus status, OutboxEventId id) {
+        String sql;
+        Statement stmt;
+
+        switch (status) {
+            case Failed f -> {
+                sql = "UPDATE %s SET status = $1, last_error = $2, retry_count = $3, processed_at = $4 WHERE id = $5"
+                        .formatted(tableName);
+                stmt = conn.createStatement(sql)
+                        .bind("$1", status.name())
+                        .bind("$2", f.error())
+                        .bind("$3", f.attemptCount())
+                        .bind("$4", f.failedAt())
+                        .bind("$5", id.value());
+            }
+            case Published p -> {
+                sql = "UPDATE %s SET status = $1, processed_at = $2 WHERE id = $3".formatted(tableName);
+                stmt = conn.createStatement(sql)
+                        .bind("$1", status.name())
+                        .bind("$2", p.publishedAt())
+                        .bind("$3", id.value());
+            }
+            case Archived a -> {
+                sql = "UPDATE %s SET status = $1, processed_at = $2, last_error = $3 WHERE id = $4".formatted(tableName);
+                stmt = conn.createStatement(sql)
+                        .bind("$1", status.name())
+                        .bind("$2", a.archivedAt())
+                        .bind("$3", a.reason())
+                        .bind("$4", id.value());
+            }
+            default -> {
+                sql = "UPDATE %s SET status = $1 WHERE id = $2".formatted(tableName);
+                stmt = conn.createStatement(sql)
+                        .bind("$1", status.name())
+                        .bind("$2", id.value());
+            }
+        }
 
         return Flux.from(stmt.execute())
                 .flatMap(Result::getRowsUpdated)

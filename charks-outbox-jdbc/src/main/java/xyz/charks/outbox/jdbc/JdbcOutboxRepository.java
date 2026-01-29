@@ -264,13 +264,54 @@ public final class JdbcOutboxRepository implements OutboxRepository {
         }
 
         String placeholders = String.join(",", ids.stream().map(_ -> "?").toList());
-        String sql = "UPDATE %s SET status = ? WHERE id IN (%s)".formatted(tableName, placeholders);
+        String sql;
+        int extraParams;
+
+        switch (status) {
+            case Failed f -> {
+                sql = "UPDATE %s SET status = ?, last_error = ?, retry_count = ?, processed_at = ? WHERE id IN (%s)"
+                        .formatted(tableName, placeholders);
+                extraParams = 4;
+            }
+            case Published _ -> {
+                sql = "UPDATE %s SET status = ?, processed_at = ? WHERE id IN (%s)"
+                        .formatted(tableName, placeholders);
+                extraParams = 2;
+            }
+            case Archived _ -> {
+                sql = "UPDATE %s SET status = ?, processed_at = ?, last_error = ? WHERE id IN (%s)"
+                        .formatted(tableName, placeholders);
+                extraParams = 3;
+            }
+            default -> {
+                sql = "UPDATE %s SET status = ? WHERE id IN (%s)".formatted(tableName, placeholders);
+                extraParams = 1;
+            }
+        }
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, status.name());
-            int idx = 2;
+            int idx = 1;
+            switch (status) {
+                case Failed f -> {
+                    stmt.setString(idx++, status.name());
+                    stmt.setString(idx++, f.error());
+                    stmt.setInt(idx++, f.attemptCount());
+                    stmt.setTimestamp(idx++, Timestamp.from(f.failedAt()));
+                }
+                case Published p -> {
+                    stmt.setString(idx++, status.name());
+                    stmt.setTimestamp(idx++, Timestamp.from(p.publishedAt()));
+                }
+                case Archived a -> {
+                    stmt.setString(idx++, status.name());
+                    stmt.setTimestamp(idx++, Timestamp.from(a.archivedAt()));
+                    setNullableString(stmt, idx++, a.reason());
+                }
+                default -> stmt.setString(idx++, status.name());
+            }
+
             for (OutboxEventId id : ids) {
                 stmt.setObject(idx++, id.value());
             }

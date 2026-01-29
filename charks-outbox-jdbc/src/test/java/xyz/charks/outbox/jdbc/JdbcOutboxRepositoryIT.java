@@ -1,7 +1,9 @@
 package xyz.charks.outbox.jdbc;
 
 import xyz.charks.outbox.core.AggregateId;
+import xyz.charks.outbox.core.Archived;
 import xyz.charks.outbox.core.EventType;
+import xyz.charks.outbox.core.Failed;
 import xyz.charks.outbox.core.LockMode;
 import xyz.charks.outbox.core.OutboxEvent;
 import xyz.charks.outbox.core.OutboxEventId;
@@ -327,6 +329,47 @@ class JdbcOutboxRepositoryIT {
     @Nested
     @DisplayName("updateStatus")
     class UpdateStatusTest {
+
+        @Test
+        @DisplayName("updates status to PUBLISHED")
+        void updatesToPublished() {
+            OutboxEvent event = createTestEvent();
+            repository.save(event);
+
+            int updated = repository.updateStatus(List.of(event.id()), Published.now());
+
+            assertThat(updated).isEqualTo(1);
+            OutboxEvent found = repository.findById(event.id()).orElseThrow();
+            assertThat(found.status()).isInstanceOf(Published.class);
+        }
+
+        @Test
+        @DisplayName("updates status to FAILED with error message")
+        void updatesToFailed() {
+            OutboxEvent event = createTestEvent();
+            repository.save(event);
+
+            repository.updateStatus(List.of(event.id()),
+                    new Failed("Connection timeout", 1, Instant.now()));
+
+            OutboxEvent found = repository.findById(event.id()).orElseThrow();
+            assertThat(found.status()).isInstanceOf(Failed.class);
+            Failed failed = (Failed) found.status();
+            assertThat(failed.error()).isEqualTo("Connection timeout");
+        }
+
+        @Test
+        @DisplayName("updates status to ARCHIVED")
+        void updatesToArchived() {
+            OutboxEvent event = createTestEvent();
+            repository.save(event);
+
+            repository.updateStatus(List.of(event.id()),
+                    new Archived(Instant.now(), "Manually archived"));
+
+            OutboxEvent found = repository.findById(event.id()).orElseThrow();
+            assertThat(found.status()).isInstanceOf(Archived.class);
+        }
 
         @Test
         @DisplayName("updates status for multiple events")
