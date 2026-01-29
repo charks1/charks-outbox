@@ -181,7 +181,8 @@ class SqsBrokerConnectorIT {
                     .queueUrl(fifoQueueUrl)
                     .build();
 
-            try (SqsBrokerConnector fifoConnector = new SqsBrokerConnector(fifoConfig)) {
+            SqsBrokerConnector fifoConnector = new SqsBrokerConnector(fifoConfig);
+            try {
                 OutboxEvent event = createTestEvent();
 
                 PublishResult result = fifoConnector.publish(event);
@@ -231,6 +232,7 @@ class SqsBrokerConnectorIT {
 
             assertThat(healthy).isFalse();
             connector = null;
+            sqsClient = null;
         }
     }
 

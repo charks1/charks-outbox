@@ -81,7 +81,7 @@ public class SqsBrokerConnector implements BrokerConnector, AutoCloseable {
                     .build()
             );
             return true;
-        } catch (SqsException e) {
+        } catch (SqsException | IllegalStateException e) {
             LOG.debug("SQS health check failed", e);
             return false;
         }
