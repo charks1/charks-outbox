@@ -196,6 +196,17 @@ class KafkaBrokerConnectorIT {
 
             assertThat(healthy).isTrue();
         }
+
+        @Test
+        @DisplayName("returns false after producer is closed")
+        void returnsFalseAfterClose() {
+            connector.close();
+
+            boolean healthy = connector.isHealthy();
+
+            assertThat(healthy).isFalse();
+            connector = null;
+        }
     }
 
     private OutboxEvent createTestEvent(String topic) {

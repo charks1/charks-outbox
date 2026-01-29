@@ -221,6 +221,17 @@ class SqsBrokerConnectorIT {
 
             assertThat(healthy).isTrue();
         }
+
+        @Test
+        @DisplayName("returns false after connector is closed")
+        void returnsFalseAfterClose() {
+            connector.close();
+
+            boolean healthy = connector.isHealthy();
+
+            assertThat(healthy).isFalse();
+            connector = null;
+        }
     }
 
     private OutboxEvent createTestEvent() {
