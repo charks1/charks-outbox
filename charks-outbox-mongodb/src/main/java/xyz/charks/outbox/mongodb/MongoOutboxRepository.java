@@ -9,6 +9,7 @@ import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import xyz.charks.outbox.core.*;
+import xyz.charks.outbox.exception.OutboxPersistenceException;
 
 import java.time.Instant;
 import java.util.*;
@@ -116,7 +117,10 @@ public class MongoOutboxRepository implements OutboxRepository {
     public OutboxEvent update(OutboxEvent event) {
         Objects.requireNonNull(event, "event");
         Document doc = toDocument(event);
-        collection.replaceOne(Filters.eq(FIELD_ID, event.id().value().toString()), doc);
+        var result = collection.replaceOne(Filters.eq(FIELD_ID, event.id().value().toString()), doc);
+        if (result.getMatchedCount() == 0) {
+            throw new OutboxPersistenceException("Event not found: " + event.id());
+        }
         LOG.debug("Updated event {}", event.id());
         return event;
     }
