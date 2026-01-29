@@ -208,6 +208,8 @@ public class KafkaBrokerConnector implements BrokerConnector {
                 event.aggregateType().getBytes(StandardCharsets.UTF_8)));
         record.headers().add(new RecordHeader("outbox-aggregate-id",
                 event.aggregateId().value().getBytes(StandardCharsets.UTF_8)));
+        record.headers().add(new RecordHeader("outbox-created-at",
+                event.createdAt().toString().getBytes(StandardCharsets.UTF_8)));
 
         return record;
     }
