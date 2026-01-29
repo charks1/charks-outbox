@@ -109,10 +109,10 @@ public final class OutboxTableSchema {
         String indexName = "idx_" + tableName + "_pending";
 
         return switch (dialect) {
-            case POSTGRESQL -> """
+            case POSTGRESQL, ORACLE -> """
                     CREATE INDEX %s ON %s (status, created_at)
                         WHERE status = 'PENDING'""".formatted(indexName, tableName);
-            case MYSQL, H2 -> """
+            case MYSQL, SQLSERVER, H2 -> """
                     CREATE INDEX %s ON %s (status, created_at)""".formatted(indexName, tableName);
         };
     }

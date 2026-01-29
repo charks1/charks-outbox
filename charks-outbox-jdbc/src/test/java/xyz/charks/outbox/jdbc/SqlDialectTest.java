@@ -97,6 +97,88 @@ class SqlDialectTest {
     }
 
     @Nested
+    @DisplayName("Oracle dialect")
+    class OracleDialectTest {
+
+        private final SqlDialect dialect = SqlDialect.ORACLE;
+
+        @Test
+        @DisplayName("returns FOR UPDATE clause for FOR_UPDATE lock mode")
+        void lockClauseForUpdate() {
+            assertThat(dialect.lockClause(LockMode.FOR_UPDATE)).isEqualTo(" FOR UPDATE");
+        }
+
+        @Test
+        @DisplayName("returns FOR UPDATE SKIP LOCKED clause")
+        void lockClauseSkipLocked() {
+            assertThat(dialect.lockClause(LockMode.FOR_UPDATE_SKIP_LOCKED))
+                    .isEqualTo(" FOR UPDATE SKIP LOCKED");
+        }
+
+        @Test
+        @DisplayName("returns FETCH FIRST clause for limit")
+        void limitClause() {
+            assertThat(dialect.limitClause(50)).isEqualTo(" FETCH FIRST 50 ROWS ONLY");
+        }
+
+        @Test
+        @DisplayName("returns correct SQL types")
+        void sqlTypes() {
+            assertThat(dialect.uuidType()).isEqualTo("VARCHAR2(36)");
+            assertThat(dialect.binaryType()).isEqualTo("BLOB");
+            assertThat(dialect.jsonType()).isEqualTo("CLOB");
+            assertThat(dialect.timestampType()).isEqualTo("TIMESTAMP WITH TIME ZONE");
+        }
+
+        @Test
+        @DisplayName("supports SKIP LOCKED")
+        void supportsSkipLocked() {
+            assertThat(dialect.supportsSkipLocked()).isTrue();
+        }
+    }
+
+    @Nested
+    @DisplayName("SQL Server dialect")
+    class SqlServerDialectTest {
+
+        private final SqlDialect dialect = SqlDialect.SQLSERVER;
+
+        @Test
+        @DisplayName("returns UPDLOCK, ROWLOCK hints for FOR_UPDATE lock mode")
+        void lockClauseForUpdate() {
+            assertThat(dialect.lockClause(LockMode.FOR_UPDATE)).isEqualTo(" WITH (UPDLOCK, ROWLOCK)");
+        }
+
+        @Test
+        @DisplayName("returns UPDLOCK, ROWLOCK, READPAST hints for SKIP LOCKED")
+        void lockClauseSkipLocked() {
+            assertThat(dialect.lockClause(LockMode.FOR_UPDATE_SKIP_LOCKED))
+                    .isEqualTo(" WITH (UPDLOCK, ROWLOCK, READPAST)");
+        }
+
+        @Test
+        @DisplayName("returns OFFSET/FETCH clause for limit")
+        void limitClause() {
+            assertThat(dialect.limitClause(50)).isEqualTo(" OFFSET 0 ROWS FETCH NEXT 50 ROWS ONLY");
+        }
+
+        @Test
+        @DisplayName("returns correct SQL types")
+        void sqlTypes() {
+            assertThat(dialect.uuidType()).isEqualTo("UNIQUEIDENTIFIER");
+            assertThat(dialect.binaryType()).isEqualTo("VARBINARY(MAX)");
+            assertThat(dialect.jsonType()).isEqualTo("NVARCHAR(MAX)");
+            assertThat(dialect.timestampType()).isEqualTo("DATETIMEOFFSET");
+        }
+
+        @Test
+        @DisplayName("supports SKIP LOCKED via READPAST")
+        void supportsSkipLocked() {
+            assertThat(dialect.supportsSkipLocked()).isTrue();
+        }
+    }
+
+    @Nested
     @DisplayName("H2 dialect")
     class H2DialectTest {
 
@@ -161,10 +243,32 @@ class SqlDialectTest {
             assertThat(SqlDialect.fromJdbcUrl(url)).isEqualTo(SqlDialect.H2);
         }
 
+        @ParameterizedTest
+        @ValueSource(strings = {
+                "jdbc:oracle:thin:@localhost:1521:xe",
+                "jdbc:oracle:thin:@//hostname:port/service",
+                "jdbc:oracle:oci:@mydb"
+        })
+        @DisplayName("detects Oracle from JDBC URL")
+        void detectOracle(String url) {
+            assertThat(SqlDialect.fromJdbcUrl(url)).isEqualTo(SqlDialect.ORACLE);
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {
+                "jdbc:sqlserver://localhost:1433;databaseName=mydb",
+                "jdbc:sqlserver://host;database=db;user=sa",
+                "jdbc:jtds:sqlserver://localhost/mydb"
+        })
+        @DisplayName("detects SQL Server from JDBC URL")
+        void detectSqlServer(String url) {
+            assertThat(SqlDialect.fromJdbcUrl(url)).isEqualTo(SqlDialect.SQLSERVER);
+        }
+
         @Test
         @DisplayName("throws exception for unsupported database")
         void unsupportedDatabase() {
-            assertThatThrownBy(() -> SqlDialect.fromJdbcUrl("jdbc:oracle:thin:@localhost:1521:xe"))
+            assertThatThrownBy(() -> SqlDialect.fromJdbcUrl("jdbc:db2://localhost:50000/mydb"))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Unsupported database");
         }

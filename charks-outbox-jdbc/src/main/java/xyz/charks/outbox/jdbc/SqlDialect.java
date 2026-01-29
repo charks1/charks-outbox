@@ -17,6 +17,8 @@ import xyz.charks.outbox.core.LockMode;
  * <ul>
  *   <li>{@link #POSTGRESQL} - PostgreSQL 12+</li>
  *   <li>{@link #MYSQL} - MySQL 8.0+ / MariaDB 10.3+</li>
+ *   <li>{@link #ORACLE} - Oracle Database 12c+</li>
+ *   <li>{@link #SQLSERVER} - Microsoft SQL Server 2016+</li>
  *   <li>{@link #H2} - H2 Database (for testing)</li>
  * </ul>
  */
@@ -123,6 +125,123 @@ public enum SqlDialect {
         @Override
         public String timestampType() {
             return "TIMESTAMP(6)";
+        }
+
+        @Override
+        public String jsonPlaceholder() {
+            return "?";
+        }
+
+        @Override
+        public boolean supportsSkipLocked() {
+            return true;
+        }
+    },
+
+    /**
+     * Oracle Database dialect.
+     *
+     * <p>Supports:
+     * <ul>
+     *   <li>FOR UPDATE SKIP LOCKED (Oracle 12c+)</li>
+     *   <li>BLOB for binary data</li>
+     *   <li>CLOB for JSON (or JSON type in 21c+)</li>
+     *   <li>RAW(16) or VARCHAR2(36) for UUID</li>
+     * </ul>
+     */
+    ORACLE {
+        @Override
+        public String lockClause(LockMode mode) {
+            return switch (mode) {
+                case FOR_UPDATE -> " FOR UPDATE";
+                case FOR_UPDATE_SKIP_LOCKED -> " FOR UPDATE SKIP LOCKED";
+                case NONE -> "";
+            };
+        }
+
+        @Override
+        public String limitClause(int limit) {
+            return " FETCH FIRST " + limit + " ROWS ONLY";
+        }
+
+        @Override
+        public String uuidType() {
+            return "VARCHAR2(36)";
+        }
+
+        @Override
+        public String binaryType() {
+            return "BLOB";
+        }
+
+        @Override
+        public String jsonType() {
+            return "CLOB";
+        }
+
+        @Override
+        public String timestampType() {
+            return "TIMESTAMP WITH TIME ZONE";
+        }
+
+        @Override
+        public String jsonPlaceholder() {
+            return "?";
+        }
+
+        @Override
+        public boolean supportsSkipLocked() {
+            return true;
+        }
+    },
+
+    /**
+     * Microsoft SQL Server dialect.
+     *
+     * <p>Supports:
+     * <ul>
+     *   <li>UPDLOCK, ROWLOCK hints for locking (no native SKIP LOCKED)</li>
+     *   <li>VARBINARY(MAX) for binary data</li>
+     *   <li>NVARCHAR(MAX) for JSON</li>
+     *   <li>UNIQUEIDENTIFIER for UUID</li>
+     * </ul>
+     *
+     * <p>Note: SQL Server uses table hints for locking which differs from
+     * standard SQL. SKIP LOCKED is emulated using READPAST hint.
+     */
+    SQLSERVER {
+        @Override
+        public String lockClause(LockMode mode) {
+            return switch (mode) {
+                case FOR_UPDATE -> " WITH (UPDLOCK, ROWLOCK)";
+                case FOR_UPDATE_SKIP_LOCKED -> " WITH (UPDLOCK, ROWLOCK, READPAST)";
+                case NONE -> "";
+            };
+        }
+
+        @Override
+        public String limitClause(int limit) {
+            return " OFFSET 0 ROWS FETCH NEXT " + limit + " ROWS ONLY";
+        }
+
+        @Override
+        public String uuidType() {
+            return "UNIQUEIDENTIFIER";
+        }
+
+        @Override
+        public String binaryType() {
+            return "VARBINARY(MAX)";
+        }
+
+        @Override
+        public String jsonType() {
+            return "NVARCHAR(MAX)";
+        }
+
+        @Override
+        public String timestampType() {
+            return "DATETIMEOFFSET";
         }
 
         @Override
@@ -265,6 +384,10 @@ public enum SqlDialect {
             return POSTGRESQL;
         } else if (lowerUrl.contains(":mysql:") || lowerUrl.contains(":mariadb:")) {
             return MYSQL;
+        } else if (lowerUrl.contains(":oracle:")) {
+            return ORACLE;
+        } else if (lowerUrl.contains(":sqlserver:") || lowerUrl.contains(":jtds:")) {
+            return SQLSERVER;
         } else if (lowerUrl.contains(":h2:")) {
             return H2;
         }
