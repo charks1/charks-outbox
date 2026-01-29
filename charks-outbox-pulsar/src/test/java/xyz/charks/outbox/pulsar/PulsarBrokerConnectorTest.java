@@ -9,6 +9,9 @@ import org.apache.pulsar.client.api.TypedMessageBuilder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 import xyz.charks.outbox.broker.PublishResult;
 import xyz.charks.outbox.core.AggregateId;
 import xyz.charks.outbox.core.EventType;
@@ -28,6 +31,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
+@Timeout(30)
 @DisplayName("PulsarBrokerConnector")
 class PulsarBrokerConnectorTest {
 

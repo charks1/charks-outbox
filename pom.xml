@@ -86,7 +86,7 @@
         <!-- Messaging -->
         <kafka-clients.version>3.9.0</kafka-clients.version>
         <amqp-client.version>5.24.0</amqp-client.version>
-        <pulsar-client.version>4.0.2</pulsar-client.version>
+        <pulsar-client.version>4.1.2</pulsar-client.version>
         <aws-sdk.version>2.29.52</aws-sdk.version>
         <jnats.version>2.20.6</jnats.version>
 
