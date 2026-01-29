@@ -248,6 +248,9 @@ class MongoOutboxRepositoryTest {
         @DisplayName("replaces document")
         void updatesEvent() {
             OutboxEvent event = createTestEvent();
+            UpdateResult updateResult = mock(UpdateResult.class);
+            when(updateResult.getMatchedCount()).thenReturn(1L);
+            when(collection.replaceOne(any(Bson.class), any(Document.class))).thenReturn(updateResult);
 
             repository.update(event);
 
