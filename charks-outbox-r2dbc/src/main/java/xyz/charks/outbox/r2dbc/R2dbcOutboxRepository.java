@@ -9,12 +9,27 @@ import io.r2dbc.spi.Statement;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import xyz.charks.outbox.core.*;
+import xyz.charks.outbox.core.AggregateId;
+import xyz.charks.outbox.core.Archived;
+import xyz.charks.outbox.core.EventType;
+import xyz.charks.outbox.core.Failed;
+import xyz.charks.outbox.core.HeadersCodec;
+import xyz.charks.outbox.core.OutboxEvent;
+import xyz.charks.outbox.core.OutboxEventId;
+import xyz.charks.outbox.core.OutboxQuery;
+import xyz.charks.outbox.core.OutboxRepository;
+import xyz.charks.outbox.core.OutboxStatus;
+import xyz.charks.outbox.core.OutboxStatusFilter;
+import xyz.charks.outbox.core.Pending;
+import xyz.charks.outbox.core.Published;
 import xyz.charks.outbox.exception.OutboxPersistenceException;
 
 import java.time.Instant;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -81,7 +96,7 @@ public class R2dbcOutboxRepository implements OutboxRepository {
         }
 
         stmt.bind("$7", event.payload())
-                .bind("$8", serializeHeaders(event.headers()))
+                .bind("$8", HeadersCodec.serialize(event.headers()))
                 .bind("$9", event.createdAt())
                 .bind("$10", event.status().name())
                 .bind("$11", event.retryCount());
@@ -248,7 +263,7 @@ public class R2dbcOutboxRepository implements OutboxRepository {
         }
 
         stmt.bind("$6", event.payload())
-                .bind("$7", serializeHeaders(event.headers()))
+                .bind("$7", HeadersCodec.serialize(event.headers()))
                 .bind("$8", event.createdAt())
                 .bind("$9", event.status().name())
                 .bind("$10", event.retryCount());
@@ -477,7 +492,7 @@ public class R2dbcOutboxRepository implements OutboxRepository {
                 .topic(topic)
                 .partitionKey(partitionKey)
                 .payload(payload)
-                .headers(deserializeHeaders(headersJson))
+                .headers(HeadersCodec.deserialize(headersJson))
                 .createdAt(createdAt)
                 .status(status)
                 .retryCount(retryCount != null ? retryCount : 0)
@@ -504,88 +519,5 @@ public class R2dbcOutboxRepository implements OutboxRepository {
             );
             default -> Pending.create();
         };
-    }
-
-    private String serializeHeaders(Map<String, String> headers) {
-        if (headers.isEmpty()) {
-            return "{}";
-        }
-        StringBuilder sb = new StringBuilder("{");
-        boolean first = true;
-        for (Map.Entry<String, String> entry : headers.entrySet()) {
-            if (!first) {
-                sb.append(",");
-            }
-            sb.append("\"").append(escapeJson(entry.getKey())).append("\":");
-            sb.append("\"").append(escapeJson(entry.getValue())).append("\"");
-            first = false;
-        }
-        sb.append("}");
-        return sb.toString();
-    }
-
-    private Map<String, String> deserializeHeaders(@Nullable String json) {
-        if (json == null || json.isBlank() || json.equals("{}")) {
-            return Map.of();
-        }
-
-        Map<String, String> headers = new HashMap<>();
-        String content = json.trim();
-        if (content.startsWith("{") && content.endsWith("}")) {
-            content = content.substring(1, content.length() - 1);
-        }
-
-        if (content.isBlank()) {
-            return Map.of();
-        }
-
-        int i = 0;
-        while (i < content.length()) {
-            while (i < content.length() && Character.isWhitespace(content.charAt(i))) i++;
-            if (i >= content.length()) break;
-
-            if (content.charAt(i) != '"') break;
-            i++;
-
-            StringBuilder key = new StringBuilder();
-            while (i < content.length() && content.charAt(i) != '"') {
-                if (content.charAt(i) == '\\' && i + 1 < content.length()) {
-                    i++;
-                }
-                key.append(content.charAt(i));
-                i++;
-            }
-            i++;
-
-            while (i < content.length() && (content.charAt(i) == ':' || Character.isWhitespace(content.charAt(i)))) i++;
-
-            if (i >= content.length() || content.charAt(i) != '"') break;
-            i++;
-
-            StringBuilder value = new StringBuilder();
-            while (i < content.length() && content.charAt(i) != '"') {
-                if (content.charAt(i) == '\\' && i + 1 < content.length()) {
-                    i++;
-                }
-                value.append(content.charAt(i));
-                i++;
-            }
-            i++;
-
-            headers.put(key.toString(), value.toString());
-
-            while (i < content.length() && (content.charAt(i) == ',' || Character.isWhitespace(content.charAt(i)))) i++;
-        }
-
-        return Map.copyOf(headers);
-    }
-
-    private String escapeJson(String value) {
-        return value
-                .replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\n", "\\n")
-                .replace("\r", "\\r")
-                .replace("\t", "\\t");
     }
 }

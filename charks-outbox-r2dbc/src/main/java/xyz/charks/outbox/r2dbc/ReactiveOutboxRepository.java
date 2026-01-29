@@ -1,75 +1,111 @@
 package xyz.charks.outbox.r2dbc;
 
-import org.reactivestreams.Publisher;
+import org.jspecify.annotations.Nullable;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import xyz.charks.outbox.core.OutboxEvent;
 import xyz.charks.outbox.core.OutboxEventId;
 import xyz.charks.outbox.core.OutboxQuery;
+import xyz.charks.outbox.core.OutboxStatus;
+import xyz.charks.outbox.core.OutboxStatusFilter;
 
-import java.util.Collection;
+import java.util.List;
 
 /**
- * Reactive interface for outbox repository operations.
+ * Reactive repository interface for outbox events using Project Reactor.
  *
- * <p>This interface provides non-blocking, reactive operations for managing
- * outbox events using Project Reactor's Publisher type.
+ * <p>This interface provides non-blocking operations for managing outbox events,
+ * returning {@link Mono} and {@link Flux} types for reactive stream processing.
+ *
+ * <p>Example usage:
+ * <pre>{@code
+ * ReactiveOutboxRepository repository = ...;
+ *
+ * // Save an event reactively
+ * repository.saveReactive(event)
+ *     .doOnSuccess(e -> log.info("Saved event: {}", e.id()))
+ *     .subscribe();
+ *
+ * // Find pending events
+ * repository.findReactive(OutboxQuery.pending().limit(10))
+ *     .doOnNext(e -> log.info("Found event: {}", e.id()))
+ *     .subscribe();
+ * }</pre>
  *
  * @see R2dbcOutboxRepository
  */
 public interface ReactiveOutboxRepository {
 
     /**
-     * Saves an event reactively.
+     * Saves an outbox event reactively.
      *
      * @param event the event to save
-     * @return a publisher that completes when the event is saved
+     * @return a Mono emitting the saved event
      */
-    Publisher<Void> save(OutboxEvent event);
+    Mono<OutboxEvent> saveReactive(OutboxEvent event);
 
     /**
-     * Saves multiple events reactively.
+     * Saves multiple outbox events reactively.
      *
      * @param events the events to save
-     * @return a publisher that completes when all events are saved
+     * @return a Flux emitting the saved events
      */
-    Publisher<Void> saveAll(Collection<OutboxEvent> events);
+    Flux<OutboxEvent> saveAllReactive(List<OutboxEvent> events);
 
     /**
-     * Finds an event by ID reactively.
+     * Finds an event by its ID reactively.
      *
      * @param id the event ID
-     * @return a publisher emitting the event if found
+     * @return a Mono emitting the event if found, or empty if not found
      */
-    Publisher<OutboxEvent> findById(OutboxEventId id);
+    Mono<OutboxEvent> findByIdReactive(OutboxEventId id);
 
     /**
-     * Finds events matching a query reactively.
+     * Finds events matching the query reactively.
      *
      * @param query the query criteria
-     * @return a publisher emitting matching events
+     * @return a Flux emitting matching events
      */
-    Publisher<OutboxEvent> findByQuery(OutboxQuery query);
+    Flux<OutboxEvent> findReactive(OutboxQuery query);
 
     /**
      * Updates an event reactively.
      *
-     * @param event the event to update
-     * @return a publisher that completes when the event is updated
+     * @param event the event with updated fields
+     * @return a Mono emitting the updated event
      */
-    Publisher<Void> update(OutboxEvent event);
+    Mono<OutboxEvent> updateReactive(OutboxEvent event);
 
     /**
-     * Deletes an event by ID reactively.
+     * Updates the status of multiple events reactively.
+     *
+     * @param ids the event IDs to update
+     * @param status the new status
+     * @return a Mono emitting the number of updated events
+     */
+    Mono<Integer> updateStatusReactive(List<OutboxEventId> ids, OutboxStatus status);
+
+    /**
+     * Deletes an event by its ID reactively.
      *
      * @param id the event ID
-     * @return a publisher that completes when the event is deleted
+     * @return a Mono emitting true if deleted, false if not found
      */
-    Publisher<Void> delete(OutboxEventId id);
+    Mono<Boolean> deleteByIdReactive(OutboxEventId id);
 
     /**
-     * Counts events matching a query reactively.
+     * Deletes events matching the query reactively.
      *
      * @param query the query criteria
-     * @return a publisher emitting the count
+     * @return a Mono emitting the number of deleted events
      */
-    Publisher<Long> count(OutboxQuery query);
+    Mono<Integer> deleteReactive(OutboxQuery query);
+
+    /**
+     * Counts events by status filter reactively.
+     *
+     * @param statusFilter the status filter, or null for all events
+     * @return a Mono emitting the count
+     */
+    Mono<Long> countReactive(@Nullable OutboxStatusFilter statusFilter);
 }

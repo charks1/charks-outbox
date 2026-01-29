@@ -4,6 +4,7 @@ import xyz.charks.outbox.core.AggregateId;
 import xyz.charks.outbox.core.Archived;
 import xyz.charks.outbox.core.EventType;
 import xyz.charks.outbox.core.Failed;
+import xyz.charks.outbox.core.HeadersCodec;
 import xyz.charks.outbox.core.LockMode;
 import xyz.charks.outbox.core.OutboxEvent;
 import xyz.charks.outbox.core.OutboxEventId;
@@ -27,7 +28,6 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -234,7 +234,7 @@ public final class JdbcOutboxRepository implements OutboxRepository {
             stmt.setString(idx++, event.topic());
             setNullableString(stmt, idx++, event.partitionKey());
             stmt.setBytes(idx++, event.payload());
-            stmt.setString(idx++, serializeHeaders(event.headers()));
+            stmt.setString(idx++, HeadersCodec.serialize(event.headers()));
             stmt.setTimestamp(idx++, Timestamp.from(event.createdAt()));
             stmt.setString(idx++, event.status().name());
             stmt.setInt(idx++, event.retryCount());
@@ -408,7 +408,7 @@ public final class JdbcOutboxRepository implements OutboxRepository {
         stmt.setString(idx++, event.topic());
         setNullableString(stmt, idx++, event.partitionKey());
         stmt.setBytes(idx++, event.payload());
-        stmt.setString(idx++, serializeHeaders(event.headers()));
+        stmt.setString(idx++, HeadersCodec.serialize(event.headers()));
         stmt.setTimestamp(idx++, Timestamp.from(event.createdAt()));
         stmt.setString(idx++, event.status().name());
         stmt.setInt(idx++, event.retryCount());
@@ -425,7 +425,7 @@ public final class JdbcOutboxRepository implements OutboxRepository {
                 .topic(rs.getString("topic"))
                 .partitionKey(rs.getString("partition_key"))
                 .payload(rs.getBytes("payload"))
-                .headers(deserializeHeaders(rs.getString("headers")))
+                .headers(HeadersCodec.deserialize(rs.getString("headers")))
                 .createdAt(rs.getTimestamp("created_at").toInstant())
                 .status(mapStatus(rs.getString("status"), rs))
                 .retryCount(rs.getInt("retry_count"))
@@ -570,89 +570,6 @@ public final class JdbcOutboxRepository implements OutboxRepository {
 
     private @Nullable Instant mapNullableTimestamp(@Nullable Timestamp ts) {
         return ts != null ? ts.toInstant() : null;
-    }
-
-    private String serializeHeaders(Map<String, String> headers) {
-        if (headers.isEmpty()) {
-            return "{}";
-        }
-        StringBuilder sb = new StringBuilder("{");
-        boolean first = true;
-        for (Map.Entry<String, String> entry : headers.entrySet()) {
-            if (!first) {
-                sb.append(",");
-            }
-            sb.append("\"").append(escapeJson(entry.getKey())).append("\":");
-            sb.append("\"").append(escapeJson(entry.getValue())).append("\"");
-            first = false;
-        }
-        sb.append("}");
-        return sb.toString();
-    }
-
-    private Map<String, String> deserializeHeaders(@Nullable String json) {
-        if (json == null || json.isBlank() || json.equals("{}")) {
-            return Map.of();
-        }
-
-        Map<String, String> headers = new HashMap<>();
-        String content = json.trim();
-        if (content.startsWith("{") && content.endsWith("}")) {
-            content = content.substring(1, content.length() - 1);
-        }
-
-        if (content.isBlank()) {
-            return Map.of();
-        }
-
-        int i = 0;
-        while (i < content.length()) {
-            while (i < content.length() && Character.isWhitespace(content.charAt(i))) i++;
-            if (i >= content.length()) break;
-
-            if (content.charAt(i) != '"') break;
-            i++;
-
-            StringBuilder key = new StringBuilder();
-            while (i < content.length() && content.charAt(i) != '"') {
-                if (content.charAt(i) == '\\' && i + 1 < content.length()) {
-                    i++;
-                }
-                key.append(content.charAt(i));
-                i++;
-            }
-            i++;
-
-            while (i < content.length() && (content.charAt(i) == ':' || Character.isWhitespace(content.charAt(i)))) i++;
-
-            if (i >= content.length() || content.charAt(i) != '"') break;
-            i++;
-
-            StringBuilder value = new StringBuilder();
-            while (i < content.length() && content.charAt(i) != '"') {
-                if (content.charAt(i) == '\\' && i + 1 < content.length()) {
-                    i++;
-                }
-                value.append(content.charAt(i));
-                i++;
-            }
-            i++;
-
-            headers.put(key.toString(), value.toString());
-
-            while (i < content.length() && (content.charAt(i) == ',' || Character.isWhitespace(content.charAt(i)))) i++;
-        }
-
-        return Map.copyOf(headers);
-    }
-
-    private String escapeJson(String value) {
-        return value
-                .replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\n", "\\n")
-                .replace("\r", "\\r")
-                .replace("\t", "\\t");
     }
 
     private record QueryBuilder(String sql, List<Object> params) {
