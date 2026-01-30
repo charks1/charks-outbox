@@ -20,9 +20,13 @@ import java.util.*;
  * <p>This implementation stores outbox events in a MongoDB collection,
  * providing document-based storage with support for distributed locking.
  *
+ * <p>Note: The {@link MongoClient} is provided via configuration and its
+ * lifecycle is managed externally. Calling {@link #close()} on this repository
+ * does not close the underlying client.
+ *
  * @see MongoOutboxConfig
  */
-public class MongoOutboxRepository implements OutboxRepository {
+public class MongoOutboxRepository implements OutboxRepository, AutoCloseable {
 
     private static final Logger LOG = LoggerFactory.getLogger(MongoOutboxRepository.class);
 
@@ -258,5 +262,16 @@ public class MongoOutboxRepository implements OutboxRepository {
             .createdAt(createdAt)
             .processedAt(processedAt)
             .build();
+    }
+
+    /**
+     * Closes this repository.
+     *
+     * <p>This method is a no-op because the {@link MongoClient} lifecycle
+     * is managed externally by the configuration provider.
+     */
+    @Override
+    public void close() {
+        // MongoClient lifecycle is managed by the configuration provider
     }
 }
