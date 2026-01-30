@@ -41,7 +41,7 @@ class OutboxTracingTest {
         openTelemetry = OpenTelemetrySdk.builder()
                 .setTracerProvider(tracerProvider)
                 .build();
-        tracing = new OutboxTracing(openTelemetry);
+        tracing = OutboxTracing.create(openTelemetry);
     }
 
     @AfterEach
@@ -51,13 +51,13 @@ class OutboxTracingTest {
     }
 
     @Nested
-    @DisplayName("constructor")
-    class ConstructorTest {
+    @DisplayName("create")
+    class CreateTest {
 
         @Test
         @DisplayName("throws exception for null openTelemetry")
         void nullOpenTelemetry() {
-            assertThatThrownBy(() -> new OutboxTracing(null))
+            assertThatThrownBy(() -> OutboxTracing.create(null))
                     .isInstanceOf(NullPointerException.class)
                     .hasMessageContaining("openTelemetry");
         }
@@ -171,17 +171,6 @@ class OutboxTracingTest {
             String result = tracing.executeInSpan(span, () -> "test-result");
 
             assertThat(result).isEqualTo("test-result");
-        }
-
-        @Test
-        @DisplayName("executes runnable successfully")
-        void executesRunnable() {
-            Span span = tracing.startPollSpan(5);
-            boolean[] executed = {false};
-
-            tracing.executeInSpan(span, () -> executed[0] = true);
-
-            assertThat(executed[0]).isTrue();
         }
 
         @Test

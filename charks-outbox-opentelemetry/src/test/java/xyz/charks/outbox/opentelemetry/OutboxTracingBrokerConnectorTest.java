@@ -46,7 +46,7 @@ class OutboxTracingBrokerConnectorTest {
                 .build();
 
         delegate = mock(BrokerConnector.class);
-        tracing = new OutboxTracing(openTelemetry);
+        tracing = OutboxTracing.create(openTelemetry);
         connector = new OutboxTracingBrokerConnector(delegate, tracing, "kafka");
     }
 

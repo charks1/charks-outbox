@@ -2,7 +2,6 @@ package xyz.charks.outbox.opentelemetry;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
@@ -31,7 +30,7 @@ import java.util.function.Supplier;
  *
  * @see OutboxTracingBrokerConnector
  */
-public class OutboxTracing {
+public record OutboxTracing(Tracer tracer) {
 
     private static final Logger LOG = LoggerFactory.getLogger(OutboxTracing.class);
 
@@ -42,20 +41,19 @@ public class OutboxTracing {
     private static final AttributeKey<String> AGGREGATE_TYPE = AttributeKey.stringKey("outbox.aggregate.type");
     private static final AttributeKey<String> AGGREGATE_ID = AttributeKey.stringKey("outbox.aggregate.id");
     private static final AttributeKey<String> EVENT_TYPE = AttributeKey.stringKey("outbox.event.type");
-    private static final AttributeKey<Long> RETRY_COUNT = AttributeKey.longKey("outbox.retry.count");
     private static final AttributeKey<Long> BATCH_SIZE = AttributeKey.longKey("outbox.batch.size");
 
-    private final Tracer tracer;
-
     /**
-     * Creates a new OutboxTracing instance.
+     * Creates a new OutboxTracing instance from an OpenTelemetry instance.
      *
      * @param openTelemetry the OpenTelemetry instance
+     * @return a new OutboxTracing instance
      */
-    public OutboxTracing(OpenTelemetry openTelemetry) {
+    public static OutboxTracing create(OpenTelemetry openTelemetry) {
         Objects.requireNonNull(openTelemetry, "openTelemetry");
-        this.tracer = openTelemetry.getTracer(INSTRUMENTATION_NAME, INSTRUMENTATION_VERSION);
+        Tracer tracer = openTelemetry.getTracer(INSTRUMENTATION_NAME, INSTRUMENTATION_VERSION);
         LOG.debug("Initialized OpenTelemetry outbox tracing");
+        return new OutboxTracing(tracer);
     }
 
     /**
@@ -66,15 +64,15 @@ public class OutboxTracing {
      */
     public Span startPollSpan(int batchSize) {
         return tracer.spanBuilder("outbox.relay.poll")
-            .setSpanKind(SpanKind.INTERNAL)
-            .setAttribute(BATCH_SIZE, (long) batchSize)
-            .startSpan();
+                .setSpanKind(SpanKind.INTERNAL)
+                .setAttribute(BATCH_SIZE, (long) batchSize)
+                .startSpan();
     }
 
     /**
      * Creates a span for processing an individual event.
      *
-     * @param event the outbox event
+     * @param event         the outbox event
      * @param parentContext the parent context
      * @return the created span
      */
@@ -82,20 +80,20 @@ public class OutboxTracing {
         Objects.requireNonNull(event, "event");
 
         return tracer.spanBuilder("outbox.event.process")
-            .setParent(parentContext)
-            .setSpanKind(SpanKind.PRODUCER)
-            .setAttribute(EVENT_ID, event.id().value().toString())
-            .setAttribute(AGGREGATE_TYPE, event.aggregateType())
-            .setAttribute(AGGREGATE_ID, event.aggregateId().value())
-            .setAttribute(EVENT_TYPE, event.eventType().value())
-            .startSpan();
+                .setParent(parentContext)
+                .setSpanKind(SpanKind.PRODUCER)
+                .setAttribute(EVENT_ID, event.id().value().toString())
+                .setAttribute(AGGREGATE_TYPE, event.aggregateType())
+                .setAttribute(AGGREGATE_ID, event.aggregateId().value())
+                .setAttribute(EVENT_TYPE, event.eventType().value())
+                .startSpan();
     }
 
     /**
      * Creates a span for the broker publish operation.
      *
-     * @param event the outbox event
-     * @param brokerType the type of broker (e.g., "kafka", "rabbitmq")
+     * @param event         the outbox event
+     * @param brokerType    the type of broker (e.g., "kafka", "rabbitmq")
      * @param parentContext the parent context
      * @return the created span
      */
@@ -104,19 +102,19 @@ public class OutboxTracing {
         Objects.requireNonNull(brokerType, "brokerType");
 
         return tracer.spanBuilder("outbox.broker.publish")
-            .setParent(parentContext)
-            .setSpanKind(SpanKind.CLIENT)
-            .setAttribute(EVENT_ID, event.id().value().toString())
-            .setAttribute(AttributeKey.stringKey("messaging.system"), brokerType)
-            .startSpan();
+                .setParent(parentContext)
+                .setSpanKind(SpanKind.CLIENT)
+                .setAttribute(EVENT_ID, event.id().value().toString())
+                .setAttribute(AttributeKey.stringKey("messaging.system"), brokerType)
+                .startSpan();
     }
 
     /**
      * Executes a supplier within a span scope.
      *
-     * @param span the span to make current
+     * @param span     the span to make current
      * @param supplier the supplier to execute
-     * @param <T> the return type
+     * @param <T>      the return type
      * @return the supplier result
      */
     public <T> T executeInSpan(Span span, Supplier<T> supplier) {
@@ -132,28 +130,11 @@ public class OutboxTracing {
     }
 
     /**
-     * Executes a runnable within a span scope.
-     *
-     * @param span the span to make current
-     * @param runnable the runnable to execute
-     */
-    public void executeInSpan(Span span, Runnable runnable) {
-        try (Scope ignored = span.makeCurrent()) {
-            runnable.run();
-        } catch (Exception e) {
-            span.setStatus(StatusCode.ERROR, e.getMessage());
-            span.recordException(e);
-            throw e;
-        } finally {
-            span.end();
-        }
-    }
-
-    /**
      * Returns the tracer for custom span creation.
      *
      * @return the OpenTelemetry tracer
      */
+    @Override
     public Tracer tracer() {
         return tracer;
     }
