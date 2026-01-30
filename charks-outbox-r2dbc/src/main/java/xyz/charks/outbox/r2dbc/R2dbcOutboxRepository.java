@@ -74,9 +74,11 @@ public class R2dbcOutboxRepository implements OutboxRepository {
                 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
                 """.formatted(tableName);
 
-        Mono.from(connectionFactory.create())
-                .flatMap(conn -> executeInsert(conn, sql, event))
-                .block();
+        Mono.usingWhen(
+                connectionFactory.create(),
+                conn -> executeInsert(conn, sql, event),
+                conn -> Mono.from(conn.close())
+        ).block();
 
         return event;
     }
@@ -115,8 +117,7 @@ public class R2dbcOutboxRepository implements OutboxRepository {
 
         return Flux.from(stmt.execute())
                 .flatMap(Result::getRowsUpdated)
-                .reduce(Long::sum)
-                .doFinally(s -> Mono.from(conn.close()).subscribe());
+                .reduce(Long::sum);
     }
 
     @Override
@@ -140,9 +141,11 @@ public class R2dbcOutboxRepository implements OutboxRepository {
 
         String sql = "SELECT * FROM %s WHERE id = $1".formatted(tableName);
 
-        return Mono.from(connectionFactory.create())
-                .flatMap(conn -> executeFindById(conn, sql, id))
-                .blockOptional();
+        return Mono.usingWhen(
+                connectionFactory.create(),
+                conn -> executeFindById(conn, sql, id),
+                conn -> Mono.from(conn.close())
+        ).blockOptional();
     }
 
     private Mono<OutboxEvent> executeFindById(Connection conn, String sql, OutboxEventId id) {
@@ -151,8 +154,7 @@ public class R2dbcOutboxRepository implements OutboxRepository {
 
         return Flux.from(stmt.execute())
                 .flatMap(result -> result.map(this::mapRowToEvent))
-                .singleOrEmpty()
-                .doFinally(s -> Mono.from(conn.close()).subscribe());
+                .singleOrEmpty();
     }
 
     @Override
@@ -197,10 +199,11 @@ public class R2dbcOutboxRepository implements OutboxRepository {
 
         String finalSql = sql.toString();
 
-        return Mono.from(connectionFactory.create())
-                .flatMapMany(conn -> executeFind(conn, finalSql, params))
-                .collectList()
-                .block();
+        return Flux.usingWhen(
+                connectionFactory.create(),
+                conn -> executeFind(conn, finalSql, params),
+                conn -> Mono.from(conn.close())
+        ).collectList().block();
     }
 
     private Flux<OutboxEvent> executeFind(Connection conn, String sql, List<Object> params) {
@@ -210,8 +213,7 @@ public class R2dbcOutboxRepository implements OutboxRepository {
         }
 
         return Flux.from(stmt.execute())
-                .flatMap(result -> result.map(this::mapRowToEvent))
-                .doFinally(s -> Mono.from(conn.close()).subscribe());
+                .flatMap(result -> result.map(this::mapRowToEvent));
     }
 
     private String mapStatusFilter(OutboxStatusFilter filter) {
@@ -238,9 +240,11 @@ public class R2dbcOutboxRepository implements OutboxRepository {
                 WHERE id = $13
                 """.formatted(tableName);
 
-        Long rowsUpdated = Mono.from(connectionFactory.create())
-                .flatMap(conn -> executeUpdate(conn, sql, event))
-                .block();
+        Long rowsUpdated = Mono.usingWhen(
+                connectionFactory.create(),
+                conn -> executeUpdate(conn, sql, event),
+                conn -> Mono.from(conn.close())
+        ).block();
 
         if (rowsUpdated == null || rowsUpdated == 0) {
             throw new OutboxPersistenceException("Event not found: " + event.id());
@@ -284,8 +288,7 @@ public class R2dbcOutboxRepository implements OutboxRepository {
 
         return Flux.from(stmt.execute())
                 .flatMap(Result::getRowsUpdated)
-                .reduce(Long::sum)
-                .doFinally(s -> Mono.from(conn.close()).subscribe());
+                .reduce(Long::sum);
     }
 
     @Override
@@ -299,9 +302,11 @@ public class R2dbcOutboxRepository implements OutboxRepository {
 
         int totalUpdated = 0;
         for (OutboxEventId id : ids) {
-            Long updated = Mono.from(connectionFactory.create())
-                    .flatMap(conn -> executeStatusUpdate(conn, status, id))
-                    .block();
+            Long updated = Mono.usingWhen(
+                    connectionFactory.create(),
+                    conn -> executeStatusUpdate(conn, status, id),
+                    conn -> Mono.from(conn.close())
+            ).block();
             if (updated != null) {
                 totalUpdated += updated.intValue();
             }
@@ -353,8 +358,7 @@ public class R2dbcOutboxRepository implements OutboxRepository {
 
         return Flux.from(stmt.execute())
                 .flatMap(Result::getRowsUpdated)
-                .reduce(Long::sum)
-                .doFinally(s -> Mono.from(conn.close()).subscribe());
+                .reduce(Long::sum);
     }
 
     @Override
@@ -364,9 +368,11 @@ public class R2dbcOutboxRepository implements OutboxRepository {
 
         String sql = "DELETE FROM %s WHERE id = $1".formatted(tableName);
 
-        Long rowsDeleted = Mono.from(connectionFactory.create())
-                .flatMap(conn -> executeDelete(conn, sql, id))
-                .block();
+        Long rowsDeleted = Mono.usingWhen(
+                connectionFactory.create(),
+                conn -> executeDelete(conn, sql, id),
+                conn -> Mono.from(conn.close())
+        ).block();
 
         return rowsDeleted != null && rowsDeleted > 0;
     }
@@ -377,8 +383,7 @@ public class R2dbcOutboxRepository implements OutboxRepository {
 
         return Flux.from(stmt.execute())
                 .flatMap(Result::getRowsUpdated)
-                .reduce(Long::sum)
-                .doFinally(s -> Mono.from(conn.close()).subscribe());
+                .reduce(Long::sum);
     }
 
     @Override
@@ -409,9 +414,11 @@ public class R2dbcOutboxRepository implements OutboxRepository {
 
         String finalSql = sql.toString();
 
-        Long rowsDeleted = Mono.from(connectionFactory.create())
-                .flatMap(conn -> executeDeleteQuery(conn, finalSql, params))
-                .block();
+        Long rowsDeleted = Mono.usingWhen(
+                connectionFactory.create(),
+                conn -> executeDeleteQuery(conn, finalSql, params),
+                conn -> Mono.from(conn.close())
+        ).block();
 
         return rowsDeleted != null ? rowsDeleted.intValue() : 0;
     }
@@ -424,8 +431,7 @@ public class R2dbcOutboxRepository implements OutboxRepository {
 
         return Flux.from(stmt.execute())
                 .flatMap(Result::getRowsUpdated)
-                .reduce(Long::sum)
-                .doFinally(s -> Mono.from(conn.close()).subscribe());
+                .reduce(Long::sum);
     }
 
     @Override
@@ -448,9 +454,11 @@ public class R2dbcOutboxRepository implements OutboxRepository {
 
         String finalSql = sql;
 
-        Long count = Mono.from(connectionFactory.create())
-                .flatMap(conn -> executeCount(conn, finalSql, params))
-                .block();
+        Long count = Mono.usingWhen(
+                connectionFactory.create(),
+                conn -> executeCount(conn, finalSql, params),
+                conn -> Mono.from(conn.close())
+        ).block();
 
         return count != null ? count : 0;
     }
@@ -463,8 +471,7 @@ public class R2dbcOutboxRepository implements OutboxRepository {
 
         return Flux.from(stmt.execute())
                 .flatMap(result -> result.map((row, meta) -> row.get(0, Long.class)))
-                .singleOrEmpty()
-                .doFinally(s -> Mono.from(conn.close()).subscribe());
+                .singleOrEmpty();
     }
 
     private OutboxEvent mapRowToEvent(Row row, RowMetadata metadata) {
