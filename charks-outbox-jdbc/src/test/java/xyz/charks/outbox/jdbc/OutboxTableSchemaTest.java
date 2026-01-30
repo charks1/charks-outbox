@@ -36,6 +36,20 @@ class OutboxTableSchemaTest {
         }
 
         @Test
+        @DisplayName("creates schema for Oracle")
+        void oracle() {
+            OutboxTableSchema schema = OutboxTableSchema.forDialect(SqlDialect.ORACLE);
+            assertThat(schema.dialect()).isEqualTo(SqlDialect.ORACLE);
+        }
+
+        @Test
+        @DisplayName("creates schema for SQL Server")
+        void sqlServer() {
+            OutboxTableSchema schema = OutboxTableSchema.forDialect(SqlDialect.SQLSERVER);
+            assertThat(schema.dialect()).isEqualTo(SqlDialect.SQLSERVER);
+        }
+
+        @Test
         @DisplayName("throws exception for null dialect")
         void nullDialect() {
             assertThatThrownBy(() -> OutboxTableSchema.forDialect(null))
@@ -75,6 +89,34 @@ class OutboxTableSchemaTest {
                     .contains("payload         LONGBLOB NOT NULL")
                     .contains("headers         JSON")
                     .contains("created_at      TIMESTAMP(6) NOT NULL");
+        }
+
+        @Test
+        @DisplayName("generates Oracle CREATE TABLE statement")
+        void oracle() {
+            OutboxTableSchema schema = OutboxTableSchema.forDialect(SqlDialect.ORACLE);
+            String ddl = schema.createTableStatement("outbox_events");
+
+            assertThat(ddl)
+                    .contains("CREATE TABLE outbox_events")
+                    .contains("id              VARCHAR2(36) PRIMARY KEY")
+                    .contains("payload         BLOB NOT NULL")
+                    .contains("headers         CLOB")
+                    .contains("created_at      TIMESTAMP WITH TIME ZONE NOT NULL");
+        }
+
+        @Test
+        @DisplayName("generates SQL Server CREATE TABLE statement")
+        void sqlServer() {
+            OutboxTableSchema schema = OutboxTableSchema.forDialect(SqlDialect.SQLSERVER);
+            String ddl = schema.createTableStatement("outbox_events");
+
+            assertThat(ddl)
+                    .contains("CREATE TABLE outbox_events")
+                    .contains("id              UNIQUEIDENTIFIER PRIMARY KEY")
+                    .contains("payload         VARBINARY(MAX) NOT NULL")
+                    .contains("headers         NVARCHAR(MAX)")
+                    .contains("created_at      DATETIMEOFFSET NOT NULL");
         }
 
         @Test
@@ -137,6 +179,30 @@ class OutboxTableSchemaTest {
         @DisplayName("generates regular index for MySQL")
         void mysqlRegularIndex() {
             OutboxTableSchema schema = OutboxTableSchema.forDialect(SqlDialect.MYSQL);
+            String ddl = schema.createPendingIndexStatement("outbox_events");
+
+            assertThat(ddl)
+                    .contains("CREATE INDEX idx_outbox_events_pending")
+                    .contains("ON outbox_events (status, created_at)")
+                    .doesNotContain("WHERE");
+        }
+
+        @Test
+        @DisplayName("generates partial index for Oracle")
+        void oraclePartialIndex() {
+            OutboxTableSchema schema = OutboxTableSchema.forDialect(SqlDialect.ORACLE);
+            String ddl = schema.createPendingIndexStatement("outbox_events");
+
+            assertThat(ddl)
+                    .contains("CREATE INDEX idx_outbox_events_pending")
+                    .contains("ON outbox_events (status, created_at)")
+                    .contains("WHERE status = 'PENDING'");
+        }
+
+        @Test
+        @DisplayName("generates regular index for SQL Server")
+        void sqlServerRegularIndex() {
+            OutboxTableSchema schema = OutboxTableSchema.forDialect(SqlDialect.SQLSERVER);
             String ddl = schema.createPendingIndexStatement("outbox_events");
 
             assertThat(ddl)
