@@ -45,6 +45,8 @@ import reactor.core.publisher.Mono;
 public class R2dbcOutboxRepository implements OutboxRepository {
 
     private static final Logger LOG = LoggerFactory.getLogger(R2dbcOutboxRepository.class);
+    private static final String STATUS_PENDING = "PENDING";
+    private static final String STATUS_FAILED = "FAILED";
 
     private final ConnectionFactory connectionFactory;
     private final String tableName;
@@ -171,8 +173,8 @@ public class R2dbcOutboxRepository implements OutboxRepository {
         if (query.statusFilter() != null) {
             if (query.statusFilter() == OutboxStatusFilter.RETRYABLE) {
                 conditions.add("status IN ($" + paramIndex++ + ", $" + paramIndex++ + ")");
-                params.add("PENDING");
-                params.add("FAILED");
+                params.add(STATUS_PENDING);
+                params.add(STATUS_FAILED);
             } else {
                 conditions.add("status = $" + paramIndex++);
                 params.add(mapStatusFilter(query.statusFilter()));
@@ -218,11 +220,11 @@ public class R2dbcOutboxRepository implements OutboxRepository {
 
     private String mapStatusFilter(OutboxStatusFilter filter) {
         return switch (filter) {
-            case PENDING -> "PENDING";
+            case PENDING -> STATUS_PENDING;
             case PUBLISHED -> "PUBLISHED";
-            case FAILED -> "FAILED";
+            case FAILED -> STATUS_FAILED;
             case ARCHIVED -> "ARCHIVED";
-            case RETRYABLE -> "PENDING";
+            case RETRYABLE -> STATUS_PENDING;
         };
     }
 
@@ -402,8 +404,8 @@ public class R2dbcOutboxRepository implements OutboxRepository {
         if (query.statusFilter() != null) {
             if (query.statusFilter() == OutboxStatusFilter.RETRYABLE) {
                 conditions.add("status IN ($" + paramIndex++ + ", $" + paramIndex++ + ")");
-                params.add("PENDING");
-                params.add("FAILED");
+                params.add(STATUS_PENDING);
+                params.add(STATUS_FAILED);
             } else {
                 conditions.add("status = $" + paramIndex++);
                 params.add(mapStatusFilter(query.statusFilter()));
@@ -447,8 +449,8 @@ public class R2dbcOutboxRepository implements OutboxRepository {
             sql = "SELECT COUNT(*) FROM %s".formatted(tableName);
         } else if (statusFilter == OutboxStatusFilter.RETRYABLE) {
             sql = "SELECT COUNT(*) FROM %s WHERE status IN ($1, $2)".formatted(tableName);
-            params.add("PENDING");
-            params.add("FAILED");
+            params.add(STATUS_PENDING);
+            params.add(STATUS_FAILED);
         } else {
             sql = "SELECT COUNT(*) FROM %s WHERE status = $1".formatted(tableName);
             params.add(mapStatusFilter(statusFilter));

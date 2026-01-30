@@ -26,6 +26,7 @@ import java.util.Objects;
 public class SqsBrokerConnector implements BrokerConnector, AutoCloseable {
 
     private static final Logger LOG = LoggerFactory.getLogger(SqsBrokerConnector.class);
+    private static final String DATA_TYPE_STRING = "String";
 
     private final SqsConfig config;
 
@@ -90,33 +91,33 @@ public class SqsBrokerConnector implements BrokerConnector, AutoCloseable {
         Map<String, MessageAttributeValue> attributes = new HashMap<>();
 
         attributes.put("eventId", MessageAttributeValue.builder()
-            .dataType("String")
+            .dataType(DATA_TYPE_STRING)
             .stringValue(event.id().value().toString())
             .build());
 
         attributes.put("aggregateType", MessageAttributeValue.builder()
-            .dataType("String")
+            .dataType(DATA_TYPE_STRING)
             .stringValue(event.aggregateType())
             .build());
 
         attributes.put("aggregateId", MessageAttributeValue.builder()
-            .dataType("String")
+            .dataType(DATA_TYPE_STRING)
             .stringValue(event.aggregateId().value())
             .build());
 
         attributes.put("eventType", MessageAttributeValue.builder()
-            .dataType("String")
+            .dataType(DATA_TYPE_STRING)
             .stringValue(event.eventType().value())
             .build());
 
         attributes.put("createdAt", MessageAttributeValue.builder()
-            .dataType("String")
+            .dataType(DATA_TYPE_STRING)
             .stringValue(event.createdAt().toString())
             .build());
 
         event.headers().forEach((key, value) ->
             attributes.put(key, MessageAttributeValue.builder()
-                .dataType("String")
+                .dataType(DATA_TYPE_STRING)
                 .stringValue(value)
                 .build()));
 

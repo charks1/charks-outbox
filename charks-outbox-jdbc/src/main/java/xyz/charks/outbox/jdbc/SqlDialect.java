@@ -67,7 +67,7 @@ public enum SqlDialect {
 
         @Override
         public String timestampType() {
-            return "TIMESTAMP WITH TIME ZONE";
+            return TIMESTAMP_WITH_TIME_ZONE;
         }
 
         @Override
@@ -181,7 +181,7 @@ public enum SqlDialect {
 
         @Override
         public String timestampType() {
-            return "TIMESTAMP WITH TIME ZONE";
+            return TIMESTAMP_WITH_TIME_ZONE;
         }
 
         @Override
@@ -292,7 +292,7 @@ public enum SqlDialect {
 
         @Override
         public String timestampType() {
-            return "TIMESTAMP WITH TIME ZONE";
+            return TIMESTAMP_WITH_TIME_ZONE;
         }
 
         @Override
@@ -308,6 +308,7 @@ public enum SqlDialect {
 
     private static final String FOR_UPDATE_CLAUSE = " FOR UPDATE";
     private static final String FOR_UPDATE_SKIP_LOCKED_CLAUSE = " FOR UPDATE SKIP LOCKED";
+    private static final String TIMESTAMP_WITH_TIME_ZONE = "TIMESTAMP WITH TIME ZONE";
 
     /**
      * Returns the SQL locking clause for the given lock mode.

@@ -238,6 +238,8 @@ class PulsarBrokerConnectorTest {
             PulsarBrokerConnector connector = new PulsarBrokerConnector(config);
 
             connector.close();
+
+            assertThat(connector).isNotNull();
         }
 
         @Test
