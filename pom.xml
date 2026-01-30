@@ -68,7 +68,7 @@
 
         <!-- Testing -->
         <junit.version>5.11.4</junit.version>
-        <assertj.version>3.27.3</assertj.version>
+        <assertj.version>3.27.6</assertj.version>
         <mockito.version>5.21.0</mockito.version>
         <bytebuddy.version>1.17.5</bytebuddy.version>
         <testcontainers.version>1.20.4</testcontainers.version>
@@ -81,14 +81,14 @@
         <r2dbc-postgresql.version>1.0.7.RELEASE</r2dbc-postgresql.version>
         <mongodb-driver.version>5.3.1</mongodb-driver.version>
         <hikaricp.version>6.2.1</hikaricp.version>
-        <postgresql.version>42.7.5</postgresql.version>
+        <postgresql.version>42.7.9</postgresql.version>
 
         <!-- Messaging -->
         <kafka-clients.version>3.9.0</kafka-clients.version>
         <amqp-client.version>5.24.0</amqp-client.version>
         <pulsar-client.version>4.1.2</pulsar-client.version>
         <aws-sdk.version>2.29.52</aws-sdk.version>
-        <jnats.version>2.20.6</jnats.version>
+        <jnats.version>2.25.1</jnats.version>
 
         <!-- Serialization -->
         <jackson.version>2.18.2</jackson.version>
