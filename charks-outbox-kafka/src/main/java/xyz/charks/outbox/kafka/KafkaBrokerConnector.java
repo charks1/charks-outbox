@@ -96,8 +96,10 @@ public class KafkaBrokerConnector implements BrokerConnector {
             Future<RecordMetadata> future = producer.send(record);
             RecordMetadata metadata = future.get(sendTimeout.toMillis(), TimeUnit.MILLISECONDS);
 
-            log.debug("Published event {} to topic {} partition {} offset {}",
-                    event.id(), metadata.topic(), metadata.partition(), metadata.offset());
+            if (log.isDebugEnabled()) {
+                log.debug("Published event {} to topic {} partition {} offset {}",
+                        event.id(), metadata.topic(), metadata.partition(), metadata.offset());
+            }
 
             return PublishResult.success(
                     event.id(),

@@ -315,7 +315,9 @@ public final class JdbcOutboxRepository implements OutboxRepository {
             }
 
             int rowsUpdated = stmt.executeUpdate();
-            log.debug("Updated status to {} for {} events", status.name(), rowsUpdated);
+            if (log.isDebugEnabled()) {
+                log.debug("Updated status to {} for {} events", status.name(), rowsUpdated);
+            }
             return rowsUpdated;
 
         } catch (SQLException e) {
@@ -552,16 +554,12 @@ public final class JdbcOutboxRepository implements OutboxRepository {
         void setParameters(PreparedStatement stmt) throws SQLException {
             for (int i = 0; i < params.size(); i++) {
                 Object param = params.get(i);
-                if (param instanceof String s) {
-                    stmt.setString(i + 1, s);
-                } else if (param instanceof Timestamp ts) {
-                    stmt.setTimestamp(i + 1, ts);
-                } else if (param instanceof Integer n) {
-                    stmt.setInt(i + 1, n);
-                } else if (param instanceof UUID uuid) {
-                    stmt.setObject(i + 1, uuid);
-                } else {
-                    stmt.setObject(i + 1, param);
+                switch (param) {
+                    case String s -> stmt.setString(i + 1, s);
+                    case Timestamp ts -> stmt.setTimestamp(i + 1, ts);
+                    case Integer n -> stmt.setInt(i + 1, n);
+                    case UUID uuid -> stmt.setObject(i + 1, uuid);
+                    default -> stmt.setObject(i + 1, param);
                 }
             }
         }

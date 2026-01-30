@@ -162,7 +162,9 @@ public class MongoOutboxRepository implements OutboxRepository, AutoCloseable {
             Filters.in(FIELD_ID, idStrings),
             new Document("$set", updateFields)
         );
-        LOG.debug("Updated status to {} for {} events", status.name(), result.getModifiedCount());
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Updated status to {} for {} events", status.name(), result.getModifiedCount());
+        }
         return (int) result.getModifiedCount();
     }
 

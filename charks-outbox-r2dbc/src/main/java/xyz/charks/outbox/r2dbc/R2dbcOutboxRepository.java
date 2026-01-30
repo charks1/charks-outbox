@@ -298,7 +298,9 @@ public class R2dbcOutboxRepository implements OutboxRepository {
         if (ids.isEmpty()) {
             return 0;
         }
-        LOG.debug("Updating status to {} for {} events", status.name(), ids.size());
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Updating status to {} for {} events", status.name(), ids.size());
+        }
 
         int totalUpdated = 0;
         for (OutboxEventId id : ids) {
