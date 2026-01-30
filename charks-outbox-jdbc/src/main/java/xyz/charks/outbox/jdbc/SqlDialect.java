@@ -47,7 +47,7 @@ public enum SqlDialect {
 
         @Override
         public String limitClause(int limit) {
-            return " LIMIT " + limit;
+            return LIMIT_CLAUSE + limit;
         }
 
         @Override
@@ -104,7 +104,7 @@ public enum SqlDialect {
 
         @Override
         public String limitClause(int limit) {
-            return " LIMIT " + limit;
+            return LIMIT_CLAUSE + limit;
         }
 
         @Override
@@ -272,7 +272,7 @@ public enum SqlDialect {
 
         @Override
         public String limitClause(int limit) {
-            return " LIMIT " + limit;
+            return LIMIT_CLAUSE + limit;
         }
 
         @Override
@@ -309,6 +309,7 @@ public enum SqlDialect {
     private static final String FOR_UPDATE_CLAUSE = " FOR UPDATE";
     private static final String FOR_UPDATE_SKIP_LOCKED_CLAUSE = " FOR UPDATE SKIP LOCKED";
     private static final String TIMESTAMP_WITH_TIME_ZONE = "TIMESTAMP WITH TIME ZONE";
+    private static final String LIMIT_CLAUSE = " LIMIT ";
 
     /**
      * Returns the SQL locking clause for the given lock mode.
