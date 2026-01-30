@@ -11,10 +11,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
+import org.testcontainers.kafka.ConfluentKafkaContainer;
 import xyz.charks.outbox.broker.PublishResult;
 import xyz.charks.outbox.core.AggregateId;
 import xyz.charks.outbox.core.EventType;
@@ -39,7 +38,7 @@ import static org.awaitility.Awaitility.await;
 class KafkaBrokerConnectorIT {
 
     @Container
-    static KafkaContainer kafka = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.5.0"));
+    static ConfluentKafkaContainer kafka = new ConfluentKafkaContainer("confluentinc/cp-kafka:7.5.0");
 
     private KafkaBrokerConnector connector;
     private KafkaConsumer<String, byte[]> consumer;
