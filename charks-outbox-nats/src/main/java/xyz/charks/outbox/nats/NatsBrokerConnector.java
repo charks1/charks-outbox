@@ -61,8 +61,7 @@ public class NatsBrokerConnector implements BrokerConnector, AutoCloseable {
 
     @Override
     public boolean isHealthy() {
-        return config.connection() != null &&
-               config.connection().getStatus() == Connection.Status.CONNECTED;
+        return config.connection().getStatus() == Connection.Status.CONNECTED;
     }
 
     private String buildSubject(OutboxEvent event) {

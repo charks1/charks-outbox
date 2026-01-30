@@ -74,7 +74,7 @@ public class RabbitMQBrokerConnector implements BrokerConnector, AutoCloseable {
 
     @Override
     public boolean isHealthy() {
-        return connection != null && connection.isOpen() && channel != null && channel.isOpen();
+        return connection.isOpen() && channel.isOpen();
     }
 
     private String buildRoutingKey(OutboxEvent event) {
@@ -106,10 +106,10 @@ public class RabbitMQBrokerConnector implements BrokerConnector, AutoCloseable {
     @Override
     public void close() {
         try {
-            if (channel != null && channel.isOpen()) {
+            if (channel.isOpen()) {
                 channel.close();
             }
-            if (connection != null && connection.isOpen()) {
+            if (connection.isOpen()) {
                 connection.close();
             }
             LOG.info("Closed RabbitMQ connection");

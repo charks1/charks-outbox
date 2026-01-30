@@ -1,5 +1,6 @@
 package xyz.charks.outbox.test;
 
+import org.jspecify.annotations.Nullable;
 import xyz.charks.outbox.broker.BrokerConnector;
 import xyz.charks.outbox.broker.PublishResult;
 import xyz.charks.outbox.core.OutboxEvent;
@@ -54,7 +55,7 @@ public class MockBrokerConnector implements BrokerConnector {
     private final AtomicBoolean healthy = new AtomicBoolean(true);
 
     private volatile Function<OutboxEvent, PublishResult> publishBehavior;
-    private volatile String nextFailureMessage;
+    private volatile @Nullable String nextFailureMessage;
     private volatile int failCount;
 
     /**

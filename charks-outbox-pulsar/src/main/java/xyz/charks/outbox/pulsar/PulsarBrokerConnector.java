@@ -70,7 +70,7 @@ public class PulsarBrokerConnector implements BrokerConnector, AutoCloseable {
 
     @Override
     public boolean isHealthy() {
-        return config.client() != null && !config.client().isClosed();
+        return !config.client().isClosed();
     }
 
     private String buildTopicName(OutboxEvent event) {
