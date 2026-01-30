@@ -118,7 +118,7 @@ public record OutboxTracing(Tracer tracer) {
      * @return the supplier result
      */
     public <T> T executeInSpan(Span span, Supplier<T> supplier) {
-        try (Scope ignored = span.makeCurrent()) {
+        try (Scope _ = span.makeCurrent()) {
             return supplier.get();
         } catch (Exception e) {
             span.setStatus(StatusCode.ERROR, e.getMessage());

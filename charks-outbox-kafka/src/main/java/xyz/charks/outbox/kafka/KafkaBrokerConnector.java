@@ -90,10 +90,10 @@ public class KafkaBrokerConnector implements BrokerConnector {
     public PublishResult publish(OutboxEvent event) {
         Objects.requireNonNull(event, "Event cannot be null");
 
-        ProducerRecord<String, byte[]> record = createRecord(event);
+        ProducerRecord<String, byte[]> producerRecord = createRecord(event);
 
         try {
-            Future<RecordMetadata> future = producer.send(record);
+            Future<RecordMetadata> future = producer.send(producerRecord);
             RecordMetadata metadata = future.get(sendTimeout.toMillis(), TimeUnit.MILLISECONDS);
 
             if (log.isDebugEnabled()) {
@@ -134,8 +134,8 @@ public class KafkaBrokerConnector implements BrokerConnector {
 
         List<Future<RecordMetadata>> futures = new ArrayList<>(events.size());
         for (OutboxEvent event : events) {
-            ProducerRecord<String, byte[]> record = createRecord(event);
-            futures.add(producer.send(record));
+            ProducerRecord<String, byte[]> producerRecord = createRecord(event);
+            futures.add(producer.send(producerRecord));
         }
 
         producer.flush();
@@ -191,27 +191,27 @@ public class KafkaBrokerConnector implements BrokerConnector {
     }
 
     private ProducerRecord<String, byte[]> createRecord(OutboxEvent event) {
-        ProducerRecord<String, byte[]> record = new ProducerRecord<>(
+        ProducerRecord<String, byte[]> producerRecord = new ProducerRecord<>(
                 event.topic(),
                 event.partitionKey(),
                 event.payload()
         );
 
         event.headers().forEach((key, value) ->
-                record.headers().add(new RecordHeader(key, value.getBytes(StandardCharsets.UTF_8)))
+                producerRecord.headers().add(new RecordHeader(key, value.getBytes(StandardCharsets.UTF_8)))
         );
 
-        record.headers().add(new RecordHeader("outbox-event-id",
+        producerRecord.headers().add(new RecordHeader("outbox-event-id",
                 event.id().value().toString().getBytes(StandardCharsets.UTF_8)));
-        record.headers().add(new RecordHeader("outbox-event-type",
+        producerRecord.headers().add(new RecordHeader("outbox-event-type",
                 event.eventType().value().getBytes(StandardCharsets.UTF_8)));
-        record.headers().add(new RecordHeader("outbox-aggregate-type",
+        producerRecord.headers().add(new RecordHeader("outbox-aggregate-type",
                 event.aggregateType().getBytes(StandardCharsets.UTF_8)));
-        record.headers().add(new RecordHeader("outbox-aggregate-id",
+        producerRecord.headers().add(new RecordHeader("outbox-aggregate-id",
                 event.aggregateId().value().getBytes(StandardCharsets.UTF_8)));
-        record.headers().add(new RecordHeader("outbox-created-at",
+        producerRecord.headers().add(new RecordHeader("outbox-created-at",
                 event.createdAt().toString().getBytes(StandardCharsets.UTF_8)));
 
-        return record;
+        return producerRecord;
     }
 }
