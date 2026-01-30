@@ -60,36 +60,52 @@ public final class HeadersCodec {
             return Map.of();
         }
 
-        Map<String, String> headers = new HashMap<>();
-        String content = json.trim();
-        if (content.startsWith("{") && content.endsWith("}")) {
-            content = content.substring(1, content.length() - 1);
-        }
-
+        String content = extractContent(json);
         if (content.isBlank()) {
             return Map.of();
         }
 
+        Map<String, String> headers = new HashMap<>();
         int[] pos = {0};
-        while (pos[0] < content.length()) {
-            skipWhitespace(content, pos);
-            if (pos[0] >= content.length() || content.charAt(pos[0]) != '"') break;
-
-            String key = parseQuotedString(content, pos);
-            if (key == null) break;
-
-            skipColonAndWhitespace(content, pos);
-            if (pos[0] >= content.length() || content.charAt(pos[0]) != '"') break;
-
-            String value = parseQuotedString(content, pos);
-            if (value == null) break;
-
-            headers.put(key, value);
-
-            skipCommaAndWhitespace(content, pos);
+        while (parseNextEntry(content, pos, headers)) {
+            // Continue parsing entries
         }
 
         return Map.copyOf(headers);
+    }
+
+    private static String extractContent(String json) {
+        String content = json.trim();
+        if (content.startsWith("{") && content.endsWith("}")) {
+            return content.substring(1, content.length() - 1);
+        }
+        return content;
+    }
+
+    private static boolean parseNextEntry(String content, int[] pos, Map<String, String> headers) {
+        skipWhitespace(content, pos);
+        if (pos[0] >= content.length() || content.charAt(pos[0]) != '"') {
+            return false;
+        }
+
+        String key = parseQuotedString(content, pos);
+        if (key == null) {
+            return false;
+        }
+
+        skipColonAndWhitespace(content, pos);
+        if (pos[0] >= content.length() || content.charAt(pos[0]) != '"') {
+            return false;
+        }
+
+        String value = parseQuotedString(content, pos);
+        if (value == null) {
+            return false;
+        }
+
+        headers.put(key, value);
+        skipCommaAndWhitespace(content, pos);
+        return true;
     }
 
     private static void skipWhitespace(String content, int[] pos) {

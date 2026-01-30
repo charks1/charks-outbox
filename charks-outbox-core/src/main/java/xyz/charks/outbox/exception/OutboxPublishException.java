@@ -20,7 +20,7 @@ import org.jspecify.annotations.Nullable;
  */
 public class OutboxPublishException extends OutboxException {
 
-    private final @Nullable OutboxEventId eventId;
+    private final transient @Nullable OutboxEventId eventId;
 
     /**
      * Creates an OutboxPublishException with a message.

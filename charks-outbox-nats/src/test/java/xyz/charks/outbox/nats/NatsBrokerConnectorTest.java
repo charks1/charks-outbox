@@ -107,12 +107,13 @@ class NatsBrokerConnectorTest {
     class CloseTest {
 
         @Test
-        @DisplayName("closes connection when connected")
-        void closesConnection() throws InterruptedException {
+        @DisplayName("closes without error when connected")
+        void closesConnection() {
             when(natsConnection.getStatus()).thenReturn(Connection.Status.CONNECTED);
 
-            // Should not throw
             connector.close();
+
+            assertThat(connector.isHealthy()).isTrue();
         }
 
         @Test
@@ -120,8 +121,9 @@ class NatsBrokerConnectorTest {
         void skipsCloseWhenDisconnected() {
             when(natsConnection.getStatus()).thenReturn(Connection.Status.DISCONNECTED);
 
-            // Should not throw
             connector.close();
+
+            assertThat(connector.isHealthy()).isFalse();
         }
     }
 

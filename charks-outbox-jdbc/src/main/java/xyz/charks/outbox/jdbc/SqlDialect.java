@@ -39,8 +39,8 @@ public enum SqlDialect {
         @Override
         public String lockClause(LockMode mode) {
             return switch (mode) {
-                case FOR_UPDATE -> " FOR UPDATE";
-                case FOR_UPDATE_SKIP_LOCKED -> " FOR UPDATE SKIP LOCKED";
+                case FOR_UPDATE -> FOR_UPDATE_CLAUSE;
+                case FOR_UPDATE_SKIP_LOCKED -> FOR_UPDATE_SKIP_LOCKED_CLAUSE;
                 case NONE -> "";
             };
         }
@@ -96,8 +96,8 @@ public enum SqlDialect {
         @Override
         public String lockClause(LockMode mode) {
             return switch (mode) {
-                case FOR_UPDATE -> " FOR UPDATE";
-                case FOR_UPDATE_SKIP_LOCKED -> " FOR UPDATE SKIP LOCKED";
+                case FOR_UPDATE -> FOR_UPDATE_CLAUSE;
+                case FOR_UPDATE_SKIP_LOCKED -> FOR_UPDATE_SKIP_LOCKED_CLAUSE;
                 case NONE -> "";
             };
         }
@@ -153,8 +153,8 @@ public enum SqlDialect {
         @Override
         public String lockClause(LockMode mode) {
             return switch (mode) {
-                case FOR_UPDATE -> " FOR UPDATE";
-                case FOR_UPDATE_SKIP_LOCKED -> " FOR UPDATE SKIP LOCKED";
+                case FOR_UPDATE -> FOR_UPDATE_CLAUSE;
+                case FOR_UPDATE_SKIP_LOCKED -> FOR_UPDATE_SKIP_LOCKED_CLAUSE;
                 case NONE -> "";
             };
         }
@@ -265,7 +265,7 @@ public enum SqlDialect {
         @Override
         public String lockClause(LockMode mode) {
             return switch (mode) {
-                case FOR_UPDATE, FOR_UPDATE_SKIP_LOCKED -> " FOR UPDATE";
+                case FOR_UPDATE, FOR_UPDATE_SKIP_LOCKED -> FOR_UPDATE_CLAUSE;
                 case NONE -> "";
             };
         }
@@ -305,6 +305,9 @@ public enum SqlDialect {
             return false;
         }
     };
+
+    private static final String FOR_UPDATE_CLAUSE = " FOR UPDATE";
+    private static final String FOR_UPDATE_SKIP_LOCKED_CLAUSE = " FOR UPDATE SKIP LOCKED";
 
     /**
      * Returns the SQL locking clause for the given lock mode.

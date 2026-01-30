@@ -299,6 +299,8 @@ class PulsarBrokerConnectorTest {
 
             connector.publish(createTestEvent());
             connector.close();
+
+            verify(producer).close();
         }
     }
 

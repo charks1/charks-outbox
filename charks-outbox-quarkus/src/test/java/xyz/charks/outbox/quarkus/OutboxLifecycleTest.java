@@ -75,8 +75,10 @@ class OutboxLifecycleTest {
             when(relayInstance.isUnsatisfied()).thenReturn(false);
             when(relayInstance.get()).thenReturn(null);
 
-            // Should not throw
             lifecycle.onStart(new StartupEvent());
+
+            verify(relayInstance).get();
+            verify(relay, never()).start();
         }
     }
 
@@ -111,8 +113,10 @@ class OutboxLifecycleTest {
             when(relayInstance.isUnsatisfied()).thenReturn(false);
             when(relayInstance.get()).thenReturn(null);
 
-            // Should not throw
             lifecycle.onStop(new ShutdownEvent());
+
+            verify(relayInstance).get();
+            verify(relay, never()).stop();
         }
     }
 
