@@ -129,13 +129,4 @@ public record OutboxTracing(Tracer tracer) {
         }
     }
 
-    /**
-     * Returns the tracer for custom span creation.
-     *
-     * @return the OpenTelemetry tracer
-     */
-    @Override
-    public Tracer tracer() {
-        return tracer;
-    }
 }

@@ -42,17 +42,14 @@ public class AvroSerializer implements Serializer<Object> {
         Objects.requireNonNull(payload, "payload");
 
         try {
-            if (payload instanceof SpecificRecordBase specificRecord) {
-                return serializeSpecific(specificRecord);
-            } else if (payload instanceof GenericRecord genericRecord) {
-                return serializeGeneric(genericRecord);
-            } else if (payload instanceof byte[] bytes) {
-                return bytes;
-            } else {
-                throw new OutboxSerializationException(
+            return switch (payload) {
+                case SpecificRecordBase specificRecord -> serializeSpecific(specificRecord);
+                case GenericRecord genericRecord -> serializeGeneric(genericRecord);
+                case byte[] bytes -> bytes;
+                default -> throw new OutboxSerializationException(
                     "Unsupported payload type: " + payload.getClass().getName() +
                     ". Expected SpecificRecordBase, GenericRecord, or byte[]");
-            }
+            };
         } catch (IOException e) {
             throw new OutboxSerializationException("Failed to serialize Avro payload", e);
         }
@@ -84,22 +81,22 @@ public class AvroSerializer implements Serializer<Object> {
         return CONTENT_TYPE;
     }
 
-    private byte[] serializeSpecific(SpecificRecordBase record) throws IOException {
-        Schema schema = record.getSchema();
+    private byte[] serializeSpecific(SpecificRecordBase avroRecord) throws IOException {
+        Schema schema = avroRecord.getSchema();
         DatumWriter<SpecificRecordBase> writer = new SpecificDatumWriter<>(schema);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(out, null);
-        writer.write(record, encoder);
+        writer.write(avroRecord, encoder);
         encoder.flush();
         return out.toByteArray();
     }
 
-    private byte[] serializeGeneric(GenericRecord record) throws IOException {
-        Schema schema = record.getSchema();
+    private byte[] serializeGeneric(GenericRecord avroRecord) throws IOException {
+        Schema schema = avroRecord.getSchema();
         DatumWriter<GenericRecord> writer = new GenericDatumWriter<>(schema);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(out, null);
-        writer.write(record, encoder);
+        writer.write(avroRecord, encoder);
         encoder.flush();
         return out.toByteArray();
     }

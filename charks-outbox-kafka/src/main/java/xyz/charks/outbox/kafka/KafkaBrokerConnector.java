@@ -184,8 +184,7 @@ public class KafkaBrokerConnector implements BrokerConnector {
             producer.close(Duration.ofSeconds(30));
             log.info("Kafka connector closed");
         } catch (Exception e) {
-            log.error("Error closing Kafka producer: {}", e.getMessage());
-            throw new OutboxPublishException("Failed to close Kafka producer", e);
+            throw new OutboxPublishException("Failed to close Kafka producer: " + e.getMessage(), e);
         }
     }
 

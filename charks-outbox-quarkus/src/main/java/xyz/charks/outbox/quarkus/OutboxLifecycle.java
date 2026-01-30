@@ -21,11 +21,14 @@ public class OutboxLifecycle {
 
     private static final Logger LOG = LoggerFactory.getLogger(OutboxLifecycle.class);
 
-    @Inject
-    Instance<OutboxRelay> relayInstance;
+    private final Instance<OutboxRelay> relayInstance;
+    private final OutboxConfiguration config;
 
     @Inject
-    OutboxConfiguration config;
+    public OutboxLifecycle(Instance<OutboxRelay> relayInstance, OutboxConfiguration config) {
+        this.relayInstance = relayInstance;
+        this.config = config;
+    }
 
     /**
      * Starts the outbox relay when the application starts.

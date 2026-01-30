@@ -23,14 +23,19 @@ public class OutboxProducer {
 
     private static final Logger LOG = LoggerFactory.getLogger(OutboxProducer.class);
 
-    @Inject
-    OutboxConfiguration config;
+    private final OutboxConfiguration config;
+    private final Instance<OutboxRepository> repositoryInstance;
+    private final Instance<BrokerConnector> connectorInstance;
 
     @Inject
-    Instance<OutboxRepository> repositoryInstance;
-
-    @Inject
-    Instance<BrokerConnector> connectorInstance;
+    public OutboxProducer(
+            OutboxConfiguration config,
+            Instance<OutboxRepository> repositoryInstance,
+            Instance<BrokerConnector> connectorInstance) {
+        this.config = config;
+        this.repositoryInstance = repositoryInstance;
+        this.connectorInstance = connectorInstance;
+    }
 
     /**
      * Produces the relay configuration from Quarkus config.

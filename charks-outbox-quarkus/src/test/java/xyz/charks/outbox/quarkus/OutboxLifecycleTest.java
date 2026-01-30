@@ -26,9 +26,7 @@ class OutboxLifecycleTest {
         config = mock(OutboxConfiguration.class);
         relay = mock(OutboxRelay.class);
 
-        lifecycle = new OutboxLifecycle();
-        setField(lifecycle, "relayInstance", relayInstance);
-        setField(lifecycle, "config", config);
+        lifecycle = new OutboxLifecycle(relayInstance, config);
     }
 
     @Nested
@@ -120,13 +118,4 @@ class OutboxLifecycleTest {
         }
     }
 
-    private void setField(Object target, String fieldName, Object value) {
-        try {
-            var field = target.getClass().getDeclaredField(fieldName);
-            field.setAccessible(true);
-            field.set(target, value);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to set field " + fieldName, e);
-        }
-    }
 }

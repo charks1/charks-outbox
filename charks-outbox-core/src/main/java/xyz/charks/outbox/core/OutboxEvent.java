@@ -233,4 +233,23 @@ public record OutboxEvent(
         result = 31 * result + Arrays.hashCode(payload);
         return result;
     }
+
+    @Override
+    public String toString() {
+        return "OutboxEvent[" +
+                "id=" + id +
+                ", aggregateType=" + aggregateType +
+                ", aggregateId=" + aggregateId +
+                ", eventType=" + eventType +
+                ", topic=" + topic +
+                ", partitionKey=" + partitionKey +
+                ", payload=" + Arrays.toString(payload) +
+                ", headers=" + headers +
+                ", createdAt=" + createdAt +
+                ", status=" + status +
+                ", retryCount=" + retryCount +
+                ", lastError=" + lastError +
+                ", processedAt=" + processedAt +
+                ']';
+    }
 }

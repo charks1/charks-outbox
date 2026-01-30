@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import xyz.charks.outbox.broker.BrokerConnector;
 import xyz.charks.outbox.broker.PublishResult;
 import xyz.charks.outbox.core.OutboxEvent;
+import xyz.charks.outbox.exception.OutboxPublishException;
 
 import java.util.Map;
 import java.util.Objects;
@@ -86,7 +87,7 @@ public class PulsarBrokerConnector implements BrokerConnector, AutoCloseable {
                     .batchingMaxMessages(config.batchingMaxMessages())
                     .create();
             } catch (PulsarClientException e) {
-                throw new RuntimeException("Failed to create producer for topic: " + t, e);
+                throw new OutboxPublishException("Failed to create producer for topic: " + t, e);
             }
         });
     }

@@ -39,15 +39,13 @@ public class ProtobufSerializer implements Serializer<Object> {
     public byte[] serialize(Object payload) {
         Objects.requireNonNull(payload, "payload");
 
-        if (payload instanceof Message message) {
-            return message.toByteArray();
-        } else if (payload instanceof byte[] bytes) {
-            return bytes;
-        } else {
-            throw new OutboxSerializationException(
+        return switch (payload) {
+            case Message message -> message.toByteArray();
+            case byte[] bytes -> bytes;
+            default -> throw new OutboxSerializationException(
                 "Unsupported payload type: " + payload.getClass().getName() +
                 ". Expected com.google.protobuf.Message or byte[]");
-        }
+        };
     }
 
     @Override
