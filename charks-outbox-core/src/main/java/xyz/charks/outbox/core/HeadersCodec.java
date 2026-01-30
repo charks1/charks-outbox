@@ -70,49 +70,66 @@ public final class HeadersCodec {
             return Map.of();
         }
 
-        int i = 0;
-        while (i < content.length()) {
-            while (i < content.length() && Character.isWhitespace(content.charAt(i))) i++;
-            if (i >= content.length()) break;
+        int[] pos = {0};
+        while (pos[0] < content.length()) {
+            skipWhitespace(content, pos);
+            if (pos[0] >= content.length() || content.charAt(pos[0]) != '"') break;
 
-            if (content.charAt(i) != '"') break;
-            i++;
+            String key = parseQuotedString(content, pos);
+            if (key == null) break;
 
-            StringBuilder key = new StringBuilder();
-            while (i < content.length() && content.charAt(i) != '"') {
-                if (content.charAt(i) == '\\' && i + 1 < content.length()) {
-                    i++;
-                    key.append(unescapeChar(content.charAt(i)));
-                } else {
-                    key.append(content.charAt(i));
-                }
-                i++;
-            }
-            i++;
+            skipColonAndWhitespace(content, pos);
+            if (pos[0] >= content.length() || content.charAt(pos[0]) != '"') break;
 
-            while (i < content.length() && (content.charAt(i) == ':' || Character.isWhitespace(content.charAt(i)))) i++;
+            String value = parseQuotedString(content, pos);
+            if (value == null) break;
 
-            if (i >= content.length() || content.charAt(i) != '"') break;
-            i++;
+            headers.put(key, value);
 
-            StringBuilder value = new StringBuilder();
-            while (i < content.length() && content.charAt(i) != '"') {
-                if (content.charAt(i) == '\\' && i + 1 < content.length()) {
-                    i++;
-                    value.append(unescapeChar(content.charAt(i)));
-                } else {
-                    value.append(content.charAt(i));
-                }
-                i++;
-            }
-            i++;
-
-            headers.put(key.toString(), value.toString());
-
-            while (i < content.length() && (content.charAt(i) == ',' || Character.isWhitespace(content.charAt(i)))) i++;
+            skipCommaAndWhitespace(content, pos);
         }
 
         return Map.copyOf(headers);
+    }
+
+    private static void skipWhitespace(String content, int[] pos) {
+        while (pos[0] < content.length() && Character.isWhitespace(content.charAt(pos[0]))) {
+            pos[0]++;
+        }
+    }
+
+    private static void skipColonAndWhitespace(String content, int[] pos) {
+        while (pos[0] < content.length() &&
+               (content.charAt(pos[0]) == ':' || Character.isWhitespace(content.charAt(pos[0])))) {
+            pos[0]++;
+        }
+    }
+
+    private static void skipCommaAndWhitespace(String content, int[] pos) {
+        while (pos[0] < content.length() &&
+               (content.charAt(pos[0]) == ',' || Character.isWhitespace(content.charAt(pos[0])))) {
+            pos[0]++;
+        }
+    }
+
+    private static @Nullable String parseQuotedString(String content, int[] pos) {
+        if (pos[0] >= content.length() || content.charAt(pos[0]) != '"') {
+            return null;
+        }
+        pos[0]++;
+
+        StringBuilder result = new StringBuilder();
+        while (pos[0] < content.length() && content.charAt(pos[0]) != '"') {
+            if (content.charAt(pos[0]) == '\\' && pos[0] + 1 < content.length()) {
+                pos[0]++;
+                result.append(unescapeChar(content.charAt(pos[0])));
+            } else {
+                result.append(content.charAt(pos[0]));
+            }
+            pos[0]++;
+        }
+        pos[0]++;
+        return result.toString();
     }
 
     private static String escapeJson(String value) {

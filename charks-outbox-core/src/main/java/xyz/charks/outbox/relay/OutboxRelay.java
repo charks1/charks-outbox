@@ -138,38 +138,28 @@ public final class OutboxRelay implements RelayLifecycle {
             return;
         }
 
-        boolean graceful = true;
-        ScheduledExecutorService sched = scheduler.getAndSet(null);
-        if (sched != null) {
-            sched.shutdown();
-            try {
-                if (!sched.awaitTermination(config.shutdownTimeout().toMillis(), TimeUnit.MILLISECONDS)) {
-                    sched.shutdownNow();
-                    graceful = false;
-                }
-            } catch (InterruptedException e) {
-                sched.shutdownNow();
-                Thread.currentThread().interrupt();
-                graceful = false;
-            }
-        }
+        boolean schedulerGraceful = shutdownExecutor(scheduler.getAndSet(null));
+        boolean executorGraceful = shutdownExecutor(executor.getAndSet(null));
 
-        ExecutorService exec = executor.getAndSet(null);
-        if (exec != null) {
-            exec.shutdown();
-            try {
-                if (!exec.awaitTermination(config.shutdownTimeout().toMillis(), TimeUnit.MILLISECONDS)) {
-                    exec.shutdownNow();
-                    graceful = false;
-                }
-            } catch (InterruptedException e) {
-                exec.shutdownNow();
-                Thread.currentThread().interrupt();
-                graceful = false;
-            }
-        }
+        metrics.onRelayStopped(schedulerGraceful && executorGraceful);
+    }
 
-        metrics.onRelayStopped(graceful);
+    private boolean shutdownExecutor(ExecutorService service) {
+        if (service == null) {
+            return true;
+        }
+        service.shutdown();
+        try {
+            if (!service.awaitTermination(config.shutdownTimeout().toMillis(), TimeUnit.MILLISECONDS)) {
+                service.shutdownNow();
+                return false;
+            }
+            return true;
+        } catch (InterruptedException e) {
+            service.shutdownNow();
+            Thread.currentThread().interrupt();
+            return false;
+        }
     }
 
     @Override

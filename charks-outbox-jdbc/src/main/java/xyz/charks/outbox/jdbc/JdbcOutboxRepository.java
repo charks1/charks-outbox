@@ -457,34 +457,9 @@ public final class JdbcOutboxRepository implements OutboxRepository {
     private QueryBuilder buildSelectQuery(OutboxQuery query) {
         StringBuilder sql = new StringBuilder("SELECT * FROM ").append(tableName);
         List<Object> params = new ArrayList<>();
-
         StringJoiner where = new StringJoiner(" AND ");
 
-        if (query.statusFilter() != null) {
-            where.add(statusWhereClause(query.statusFilter()));
-        }
-
-        if (!query.aggregateTypes().isEmpty()) {
-            String placeholders = String.join(",", query.aggregateTypes().stream().map(_ -> "?").toList());
-            where.add("aggregate_type IN (" + placeholders + ")");
-            params.addAll(query.aggregateTypes());
-        }
-
-        if (!query.topics().isEmpty()) {
-            String placeholders = String.join(",", query.topics().stream().map(_ -> "?").toList());
-            where.add("topic IN (" + placeholders + ")");
-            params.addAll(query.topics());
-        }
-
-        if (query.createdAfter() != null) {
-            where.add("created_at >= ?");
-            params.add(Timestamp.from(query.createdAfter()));
-        }
-
-        if (query.createdBefore() != null) {
-            where.add("created_at < ?");
-            params.add(Timestamp.from(query.createdBefore()));
-        }
+        addWhereConditions(query, where, params);
 
         if (query.maxRetryCount() != null) {
             where.add("retry_count <= ?");
@@ -504,9 +479,18 @@ public final class JdbcOutboxRepository implements OutboxRepository {
     private QueryBuilder buildDeleteQuery(OutboxQuery query) {
         StringBuilder sql = new StringBuilder("DELETE FROM ").append(tableName);
         List<Object> params = new ArrayList<>();
-
         StringJoiner where = new StringJoiner(" AND ");
 
+        addWhereConditions(query, where, params);
+
+        if (where.length() > 0) {
+            sql.append(" WHERE ").append(where);
+        }
+
+        return new QueryBuilder(sql.toString(), params);
+    }
+
+    private void addWhereConditions(OutboxQuery query, StringJoiner where, List<Object> params) {
         if (query.statusFilter() != null) {
             where.add(statusWhereClause(query.statusFilter()));
         }
@@ -532,12 +516,6 @@ public final class JdbcOutboxRepository implements OutboxRepository {
             where.add("created_at < ?");
             params.add(Timestamp.from(query.createdBefore()));
         }
-
-        if (where.length() > 0) {
-            sql.append(" WHERE ").append(where);
-        }
-
-        return new QueryBuilder(sql.toString(), params);
     }
 
     private String statusWhereClause(OutboxStatusFilter filter) {
