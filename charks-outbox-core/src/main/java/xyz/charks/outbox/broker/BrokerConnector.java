@@ -1,7 +1,6 @@
 package xyz.charks.outbox.broker;
 
 import xyz.charks.outbox.core.OutboxEvent;
-import xyz.charks.outbox.exception.OutboxPublishException;
 
 import java.util.List;
 

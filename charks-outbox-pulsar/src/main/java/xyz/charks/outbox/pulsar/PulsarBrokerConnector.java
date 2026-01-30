@@ -78,7 +78,7 @@ public class PulsarBrokerConnector implements BrokerConnector, AutoCloseable {
         return config.topicPrefix() + event.aggregateType().toLowerCase();
     }
 
-    private Producer<byte[]> getOrCreateProducer(String topic) throws PulsarClientException {
+    private Producer<byte[]> getOrCreateProducer(String topic) {
         return producers.computeIfAbsent(topic, t -> {
             try {
                 return config.client().newProducer()

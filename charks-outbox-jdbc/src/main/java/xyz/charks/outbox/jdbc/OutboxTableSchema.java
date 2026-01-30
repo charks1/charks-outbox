@@ -112,8 +112,7 @@ public final class OutboxTableSchema {
             case POSTGRESQL, ORACLE -> """
                     CREATE INDEX %s ON %s (status, created_at)
                         WHERE status = 'PENDING'""".formatted(indexName, tableName);
-            case MYSQL, SQLSERVER, H2 -> """
-                    CREATE INDEX %s ON %s (status, created_at)""".formatted(indexName, tableName);
+            case MYSQL, SQLSERVER, H2 -> "CREATE INDEX %s ON %s (status, created_at)".formatted(indexName, tableName);
         };
     }
 
