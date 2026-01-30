@@ -80,7 +80,8 @@ class SqsBrokerConnectorIT {
         if (sqsClient != null && queueUrl != null) {
             try {
                 sqsClient.deleteQueue(DeleteQueueRequest.builder().queueUrl(queueUrl).build());
-            } catch (Exception ignored) {
+            } catch (Exception _) {
+                // Queue cleanup is best-effort during teardown
             }
         }
     }

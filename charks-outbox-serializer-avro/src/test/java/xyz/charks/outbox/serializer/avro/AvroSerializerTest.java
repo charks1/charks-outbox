@@ -81,11 +81,11 @@ class AvroSerializerTest {
         @Test
         @DisplayName("serializes GenericRecord")
         void serializesGenericRecord() {
-            GenericRecord record = new GenericData.Record(testSchema);
-            record.put("id", "test-123");
-            record.put("value", 42);
+            GenericRecord avroRecord = new GenericData.Record(testSchema);
+            avroRecord.put("id", "test-123");
+            avroRecord.put("value", 42);
 
-            byte[] result = serializer.serialize(record);
+            byte[] result = serializer.serialize(avroRecord);
 
             assertThat(result).isNotEmpty();
         }

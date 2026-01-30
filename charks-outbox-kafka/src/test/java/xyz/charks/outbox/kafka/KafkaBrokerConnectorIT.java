@@ -93,17 +93,17 @@ class KafkaBrokerConnectorIT {
             AtomicReference<ConsumerRecord<String, byte[]>> receivedRecord = new AtomicReference<>();
             await().atMost(Duration.ofSeconds(30)).untilAsserted(() -> {
                 ConsumerRecords<String, byte[]> records = consumer.poll(Duration.ofMillis(500));
-                for (ConsumerRecord<String, byte[]> record : records) {
-                    if (record.topic().equals(topic)) {
-                        receivedRecord.set(record);
+                for (ConsumerRecord<String, byte[]> r : records) {
+                    if (r.topic().equals(topic)) {
+                        receivedRecord.set(r);
                     }
                 }
                 assertThat(receivedRecord.get()).isNotNull();
             });
 
-            ConsumerRecord<String, byte[]> record = receivedRecord.get();
-            assertThat(record.key()).isEqualTo(event.partitionKey());
-            assertThat(record.value()).isEqualTo(event.payload());
+            ConsumerRecord<String, byte[]> consumerRecord = receivedRecord.get();
+            assertThat(consumerRecord.key()).isEqualTo(event.partitionKey());
+            assertThat(consumerRecord.value()).isEqualTo(event.payload());
         }
 
         @Test
@@ -127,22 +127,22 @@ class KafkaBrokerConnectorIT {
             AtomicReference<ConsumerRecord<String, byte[]>> receivedRecord = new AtomicReference<>();
             await().atMost(Duration.ofSeconds(30)).untilAsserted(() -> {
                 ConsumerRecords<String, byte[]> records = consumer.poll(Duration.ofMillis(500));
-                for (ConsumerRecord<String, byte[]> record : records) {
-                    if (record.topic().equals(topic)) {
-                        receivedRecord.set(record);
+                for (ConsumerRecord<String, byte[]> r : records) {
+                    if (r.topic().equals(topic)) {
+                        receivedRecord.set(r);
                     }
                 }
                 assertThat(receivedRecord.get()).isNotNull();
             });
 
-            ConsumerRecord<String, byte[]> record = receivedRecord.get();
-            assertThat(getHeader(record, "outbox-event-id")).isEqualTo(event.id().value().toString());
-            assertThat(getHeader(record, "outbox-event-type")).isEqualTo("OrderCreated");
-            assertThat(getHeader(record, "outbox-aggregate-type")).isEqualTo("Order");
-            assertThat(getHeader(record, "outbox-aggregate-id")).isEqualTo("order-123");
-            assertThat(getHeader(record, "outbox-created-at")).isEqualTo(event.createdAt().toString());
-            assertThat(getHeader(record, "traceId")).isEqualTo("trace-abc");
-            assertThat(getHeader(record, "correlationId")).isEqualTo("corr-xyz");
+            ConsumerRecord<String, byte[]> consumerRecord = receivedRecord.get();
+            assertThat(getHeader(consumerRecord, "outbox-event-id")).isEqualTo(event.id().value().toString());
+            assertThat(getHeader(consumerRecord, "outbox-event-type")).isEqualTo("OrderCreated");
+            assertThat(getHeader(consumerRecord, "outbox-aggregate-type")).isEqualTo("Order");
+            assertThat(getHeader(consumerRecord, "outbox-aggregate-id")).isEqualTo("order-123");
+            assertThat(getHeader(consumerRecord, "outbox-created-at")).isEqualTo(event.createdAt().toString());
+            assertThat(getHeader(consumerRecord, "traceId")).isEqualTo("trace-abc");
+            assertThat(getHeader(consumerRecord, "correlationId")).isEqualTo("corr-xyz");
         }
     }
 

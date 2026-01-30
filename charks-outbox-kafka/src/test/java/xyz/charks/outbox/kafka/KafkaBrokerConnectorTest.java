@@ -88,15 +88,15 @@ class KafkaBrokerConnectorTest {
                     ArgumentCaptor.forClass(ProducerRecord.class);
             verify(producer).send(captor.capture());
 
-            ProducerRecord<String, byte[]> record = captor.getValue();
-            assertThat(record.topic()).isEqualTo("orders");
-            assertThat(record.key()).isNull();
-            assertThat(record.value()).isEqualTo("{}".getBytes(StandardCharsets.UTF_8));
-            assertThat(record.headers().lastHeader("correlation-id")).isNotNull();
-            assertThat(record.headers().lastHeader("outbox-event-id")).isNotNull();
-            assertThat(record.headers().lastHeader("outbox-event-type")).isNotNull();
-            assertThat(record.headers().lastHeader("outbox-aggregate-type")).isNotNull();
-            assertThat(record.headers().lastHeader("outbox-aggregate-id")).isNotNull();
+            ProducerRecord<String, byte[]> producerRecord = captor.getValue();
+            assertThat(producerRecord.topic()).isEqualTo("orders");
+            assertThat(producerRecord.key()).isNull();
+            assertThat(producerRecord.value()).isEqualTo("{}".getBytes(StandardCharsets.UTF_8));
+            assertThat(producerRecord.headers().lastHeader("correlation-id")).isNotNull();
+            assertThat(producerRecord.headers().lastHeader("outbox-event-id")).isNotNull();
+            assertThat(producerRecord.headers().lastHeader("outbox-event-type")).isNotNull();
+            assertThat(producerRecord.headers().lastHeader("outbox-aggregate-type")).isNotNull();
+            assertThat(producerRecord.headers().lastHeader("outbox-aggregate-id")).isNotNull();
         }
 
         @Test
