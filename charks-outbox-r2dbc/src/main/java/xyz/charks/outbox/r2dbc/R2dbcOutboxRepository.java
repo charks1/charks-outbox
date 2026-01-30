@@ -319,46 +319,43 @@ public class R2dbcOutboxRepository implements OutboxRepository {
     }
 
     private Mono<Long> executeStatusUpdate(Connection conn, OutboxStatus status, OutboxEventId id) {
-        String sql;
-        Statement stmt;
-
-        switch (status) {
-            case Failed f -> {
-                sql = "UPDATE %s SET status = $1, last_error = $2, retry_count = $3, processed_at = $4 WHERE id = $5"
+        Statement stmt = switch (status) {
+            case Failed(var error, var attemptCount, var failedAt) -> {
+                String sql = "UPDATE %s SET status = $1, last_error = $2, retry_count = $3, processed_at = $4 WHERE id = $5"
                         .formatted(tableName);
-                stmt = conn.createStatement(sql)
+                yield conn.createStatement(sql)
                         .bind("$1", status.name())
-                        .bind("$2", f.error())
-                        .bind("$3", f.attemptCount())
-                        .bind("$4", f.failedAt())
+                        .bind("$2", error)
+                        .bind("$3", attemptCount)
+                        .bind("$4", failedAt)
                         .bind("$5", id.value());
             }
-            case Published p -> {
-                sql = "UPDATE %s SET status = $1, processed_at = $2 WHERE id = $3".formatted(tableName);
-                stmt = conn.createStatement(sql)
+            case Published(var publishedAt) -> {
+                String sql = "UPDATE %s SET status = $1, processed_at = $2 WHERE id = $3".formatted(tableName);
+                yield conn.createStatement(sql)
                         .bind("$1", status.name())
-                        .bind("$2", p.publishedAt())
+                        .bind("$2", publishedAt)
                         .bind("$3", id.value());
             }
-            case Archived a -> {
-                sql = "UPDATE %s SET status = $1, processed_at = $2, last_error = $3 WHERE id = $4".formatted(tableName);
-                stmt = conn.createStatement(sql)
+            case Archived(var archivedAt, var reason) -> {
+                String sql = "UPDATE %s SET status = $1, processed_at = $2, last_error = $3 WHERE id = $4".formatted(tableName);
+                Statement s = conn.createStatement(sql)
                         .bind("$1", status.name())
-                        .bind("$2", a.archivedAt());
-                if (a.reason() != null) {
-                    stmt.bind("$3", a.reason());
+                        .bind("$2", archivedAt);
+                if (reason != null) {
+                    s.bind("$3", reason);
                 } else {
-                    stmt.bindNull("$3", String.class);
+                    s.bindNull("$3", String.class);
                 }
-                stmt.bind("$4", id.value());
+                yield s.bind("$4", id.value());
             }
             default -> {
-                sql = "UPDATE %s SET status = $1 WHERE id = $2".formatted(tableName);
-                stmt = conn.createStatement(sql)
+                String sql = "UPDATE %s SET status = $1 WHERE id = $2".formatted(tableName);
+                yield conn.createStatement(sql)
                         .bind("$1", status.name())
                         .bind("$2", id.value());
             }
-        }
+        };
 
         return Flux.from(stmt.execute())
                 .flatMap(Result::getRowsUpdated)

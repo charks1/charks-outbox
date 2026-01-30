@@ -141,21 +141,18 @@ public class MongoOutboxRepository implements OutboxRepository, AutoCloseable {
         Document updateFields = new Document(FIELD_STATUS, status.name());
 
         switch (status) {
-            case Failed f -> {
-                updateFields.append(FIELD_LAST_ERROR, f.error());
-                updateFields.append(FIELD_RETRY_COUNT, f.attemptCount());
-                updateFields.append(FIELD_PROCESSED_AT, Date.from(f.failedAt()));
+            case Failed(var error, var attemptCount, var failedAt) -> {
+                updateFields.append(FIELD_LAST_ERROR, error);
+                updateFields.append(FIELD_RETRY_COUNT, attemptCount);
+                updateFields.append(FIELD_PROCESSED_AT, Date.from(failedAt));
             }
-            case Published p -> {
-                updateFields.append(FIELD_PROCESSED_AT, Date.from(p.publishedAt()));
+            case Published(var publishedAt) ->
+                updateFields.append(FIELD_PROCESSED_AT, Date.from(publishedAt));
+            case Archived(var archivedAt, var reason) -> {
+                updateFields.append(FIELD_PROCESSED_AT, Date.from(archivedAt));
+                updateFields.append(FIELD_LAST_ERROR, reason);
             }
-            case Archived a -> {
-                updateFields.append(FIELD_PROCESSED_AT, Date.from(a.archivedAt()));
-                updateFields.append(FIELD_LAST_ERROR, a.reason());
-            }
-            default -> {
-                // Pending: no additional fields
-            }
+            default -> { }
         }
 
         var result = collection.updateMany(

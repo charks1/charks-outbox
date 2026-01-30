@@ -262,50 +262,35 @@ public final class JdbcOutboxRepository implements OutboxRepository {
         }
 
         String placeholders = String.join(",", ids.stream().map(_ -> "?").toList());
-        String sql;
-        int extraParams;
-
-        switch (status) {
-            case Failed f -> {
-                sql = "UPDATE %s SET status = ?, last_error = ?, retry_count = ?, processed_at = ? WHERE id IN (%s)"
-                        .formatted(tableName, placeholders);
-                extraParams = 4;
-            }
-            case Published _ -> {
-                sql = "UPDATE %s SET status = ?, processed_at = ? WHERE id IN (%s)"
-                        .formatted(tableName, placeholders);
-                extraParams = 2;
-            }
-            case Archived _ -> {
-                sql = "UPDATE %s SET status = ?, processed_at = ?, last_error = ? WHERE id IN (%s)"
-                        .formatted(tableName, placeholders);
-                extraParams = 3;
-            }
-            default -> {
-                sql = "UPDATE %s SET status = ? WHERE id IN (%s)".formatted(tableName, placeholders);
-                extraParams = 1;
-            }
-        }
+        String sql = switch (status) {
+            case Failed _ -> "UPDATE %s SET status = ?, last_error = ?, retry_count = ?, processed_at = ? WHERE id IN (%s)"
+                    .formatted(tableName, placeholders);
+            case Published _ -> "UPDATE %s SET status = ?, processed_at = ? WHERE id IN (%s)"
+                    .formatted(tableName, placeholders);
+            case Archived _ -> "UPDATE %s SET status = ?, processed_at = ?, last_error = ? WHERE id IN (%s)"
+                    .formatted(tableName, placeholders);
+            default -> "UPDATE %s SET status = ? WHERE id IN (%s)".formatted(tableName, placeholders);
+        };
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             int idx = 1;
             switch (status) {
-                case Failed f -> {
+                case Failed(var error, var attemptCount, var failedAt) -> {
                     stmt.setString(idx++, status.name());
-                    stmt.setString(idx++, f.error());
-                    stmt.setInt(idx++, f.attemptCount());
-                    stmt.setTimestamp(idx++, Timestamp.from(f.failedAt()));
+                    stmt.setString(idx++, error);
+                    stmt.setInt(idx++, attemptCount);
+                    stmt.setTimestamp(idx++, Timestamp.from(failedAt));
                 }
-                case Published p -> {
+                case Published(var publishedAt) -> {
                     stmt.setString(idx++, status.name());
-                    stmt.setTimestamp(idx++, Timestamp.from(p.publishedAt()));
+                    stmt.setTimestamp(idx++, Timestamp.from(publishedAt));
                 }
-                case Archived a -> {
+                case Archived(var archivedAt, var reason) -> {
                     stmt.setString(idx++, status.name());
-                    stmt.setTimestamp(idx++, Timestamp.from(a.archivedAt()));
-                    setNullableString(stmt, idx++, a.reason());
+                    stmt.setTimestamp(idx++, Timestamp.from(archivedAt));
+                    setNullableString(stmt, idx++, reason);
                 }
                 default -> stmt.setString(idx++, status.name());
             }
