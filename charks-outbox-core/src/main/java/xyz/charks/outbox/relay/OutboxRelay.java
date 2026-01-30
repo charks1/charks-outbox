@@ -155,7 +155,7 @@ public final class OutboxRelay implements RelayLifecycle {
                 return false;
             }
             return true;
-        } catch (InterruptedException e) {
+        } catch (InterruptedException _) {
             service.shutdownNow();
             Thread.currentThread().interrupt();
             return false;
@@ -179,7 +179,7 @@ public final class OutboxRelay implements RelayLifecycle {
 
         try {
             doProcessBatch();
-        } catch (Exception e) {
+        } catch (Exception _) {
             // Log error but continue polling
         }
     }
@@ -215,7 +215,7 @@ public final class OutboxRelay implements RelayLifecycle {
                 } else {
                     failed++;
                 }
-            } catch (Exception e) {
+            } catch (Exception _) {
                 failed++;
             }
         }
@@ -256,9 +256,7 @@ public final class OutboxRelay implements RelayLifecycle {
         OutboxEvent failed = event.markFailed(error.getMessage() != null ? error.getMessage() : error.getClass().getName());
 
         if (retryPolicy.shouldRetry(failed) && retryPolicy.isRetryable(error)) {
-            retryPolicy.nextRetryDelay(failed, error).ifPresent(delay -> {
-                metrics.onEventRetryScheduled(failed.id(), failed.retryCount(), delay);
-            });
+            retryPolicy.nextRetryDelay(failed, error).ifPresent(delay -> metrics.onEventRetryScheduled(failed.id(), failed.retryCount(), delay));
             repository.update(failed);
         } else {
             metrics.onEventExhausted(failed, failed.retryCount(), error);

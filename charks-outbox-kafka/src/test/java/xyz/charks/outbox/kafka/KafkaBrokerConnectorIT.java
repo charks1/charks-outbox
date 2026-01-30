@@ -219,8 +219,8 @@ class KafkaBrokerConnectorIT {
                 .build();
     }
 
-    private String getHeader(ConsumerRecord<String, byte[]> record, String key) {
-        var header = record.headers().lastHeader(key);
+    private String getHeader(ConsumerRecord<String, byte[]> consumerRecord, String key) {
+        var header = consumerRecord.headers().lastHeader(key);
         return header != null ? new String(header.value(), StandardCharsets.UTF_8) : null;
     }
 }

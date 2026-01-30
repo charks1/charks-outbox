@@ -132,7 +132,7 @@ public class MongoOutboxRepository implements OutboxRepository, AutoCloseable {
     @Override
     public int updateStatus(List<OutboxEventId> ids, OutboxStatus status) {
         Objects.requireNonNull(ids, "ids");
-        Objects.requireNonNull(status, "status");
+        Objects.requireNonNull(status, FIELD_STATUS);
         if (ids.isEmpty()) {
             return 0;
         }
@@ -152,7 +152,7 @@ public class MongoOutboxRepository implements OutboxRepository, AutoCloseable {
                 updateFields.append(FIELD_PROCESSED_AT, Date.from(archivedAt));
                 updateFields.append(FIELD_LAST_ERROR, reason);
             }
-            default -> { }
+            default -> { /* No additional fields for Pending status */ }
         }
 
         var result = collection.updateMany(

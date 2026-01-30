@@ -514,9 +514,9 @@ public class R2dbcOutboxRepository implements OutboxRepository {
                                    @Nullable String lastError,
                                    @Nullable Integer retryCount) {
         return switch (statusStr) {
-            case "PENDING" -> Pending.at(createdAt != null ? createdAt : Instant.now());
+            case STATUS_PENDING -> Pending.at(createdAt != null ? createdAt : Instant.now());
             case "PUBLISHED" -> Published.at(processedAt != null ? processedAt : Instant.now());
-            case "FAILED" -> new Failed(
+            case STATUS_FAILED -> new Failed(
                     lastError != null ? lastError : "Unknown error",
                     retryCount != null ? retryCount : 1,
                     processedAt != null ? processedAt : Instant.now()

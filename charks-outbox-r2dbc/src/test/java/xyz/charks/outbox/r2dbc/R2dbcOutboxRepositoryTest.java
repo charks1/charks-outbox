@@ -1,11 +1,6 @@
 package xyz.charks.outbox.r2dbc;
 
-import io.r2dbc.spi.Connection;
-import io.r2dbc.spi.ConnectionFactory;
-import io.r2dbc.spi.Result;
-import io.r2dbc.spi.Row;
-import io.r2dbc.spi.RowMetadata;
-import io.r2dbc.spi.Statement;
+import io.r2dbc.spi.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -13,18 +8,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.stubbing.Answer;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import xyz.charks.outbox.core.AggregateId;
-import xyz.charks.outbox.core.EventType;
-import xyz.charks.outbox.core.OutboxEvent;
-import xyz.charks.outbox.core.OutboxEventId;
-import xyz.charks.outbox.core.OutboxQuery;
-import xyz.charks.outbox.core.OutboxStatusFilter;
-import xyz.charks.outbox.core.Pending;
-import xyz.charks.outbox.core.Published;
+import xyz.charks.outbox.core.*;
 import xyz.charks.outbox.exception.OutboxPersistenceException;
 
 import java.nio.charset.StandardCharsets;
@@ -38,10 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("R2dbcOutboxRepository")

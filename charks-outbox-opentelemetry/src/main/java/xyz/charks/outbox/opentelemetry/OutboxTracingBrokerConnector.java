@@ -44,7 +44,7 @@ public class OutboxTracingBrokerConnector implements BrokerConnector, AutoClosea
 
         Span span = tracing.startPublishSpan(event, brokerType, Context.current());
 
-        try (Scope _ = span.makeCurrent()) {
+        try (var _ = span.makeCurrent()) {
             PublishResult result = delegate.publish(event);
 
             if (result.success()) {

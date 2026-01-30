@@ -112,12 +112,12 @@ public class KafkaBrokerConnector implements BrokerConnector {
             log.error("Failed to publish event {} to topic {}: {}",
                     event.id(), event.topic(), cause.getMessage());
             return PublishResult.failure(event.id(), cause);
-        } catch (InterruptedException e) {
+        } catch (InterruptedException _) {
             Thread.currentThread().interrupt();
             log.error("Interrupted while publishing event {} to topic {}",
                     event.id(), event.topic());
             return PublishResult.failure(event.id(), "Interrupted during publish");
-        } catch (TimeoutException e) {
+        } catch (TimeoutException _) {
             log.error("Timeout publishing event {} to topic {} after {}",
                     event.id(), event.topic(), sendTimeout);
             return PublishResult.failure(event.id(), "Publish timeout after " + sendTimeout);
@@ -156,10 +156,10 @@ public class KafkaBrokerConnector implements BrokerConnector {
             } catch (ExecutionException e) {
                 Throwable cause = e.getCause() != null ? e.getCause() : e;
                 results.add(PublishResult.failure(event.id(), cause));
-            } catch (InterruptedException e) {
+            } catch (InterruptedException _) {
                 Thread.currentThread().interrupt();
                 results.add(PublishResult.failure(event.id(), "Interrupted during publish"));
-            } catch (TimeoutException e) {
+            } catch (TimeoutException _) {
                 results.add(PublishResult.failure(event.id(), "Publish timeout after " + sendTimeout));
             }
         }

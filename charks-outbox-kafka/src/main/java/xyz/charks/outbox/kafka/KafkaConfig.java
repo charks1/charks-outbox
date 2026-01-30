@@ -1,7 +1,5 @@
 package xyz.charks.outbox.kafka;
 
-import org.jspecify.annotations.Nullable;
-
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;

@@ -17,33 +17,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import xyz.charks.outbox.core.AggregateId;
-import xyz.charks.outbox.core.Archived;
-import xyz.charks.outbox.core.EventType;
-import xyz.charks.outbox.core.Failed;
-import xyz.charks.outbox.core.OutboxEvent;
-import xyz.charks.outbox.core.OutboxEventId;
-import xyz.charks.outbox.core.OutboxQuery;
-import xyz.charks.outbox.core.OutboxStatusFilter;
-import xyz.charks.outbox.core.Pending;
-import xyz.charks.outbox.core.Published;
+import xyz.charks.outbox.core.*;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.function.Consumer;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("MongoOutboxRepository")
