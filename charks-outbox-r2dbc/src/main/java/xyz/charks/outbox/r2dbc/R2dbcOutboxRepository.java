@@ -170,14 +170,17 @@ public class R2dbcOutboxRepository implements OutboxRepository {
 
         List<String> conditions = new ArrayList<>();
 
-        if (query.statusFilter() != null) {
-            if (query.statusFilter() == OutboxStatusFilter.RETRYABLE) {
-                conditions.add("status IN ($" + paramIndex++ + ", $" + paramIndex++ + ")");
+        OutboxStatusFilter statusFilter = query.statusFilter();
+        if (statusFilter != null) {
+            if (statusFilter == OutboxStatusFilter.RETRYABLE) {
+                conditions.add("status IN ($" + paramIndex + ", $" + (paramIndex + 1) + ")");
+                paramIndex += 2;
                 params.add(STATUS_PENDING);
                 params.add(STATUS_FAILED);
             } else {
-                conditions.add("status = $" + paramIndex++);
-                params.add(mapStatusFilter(query.statusFilter()));
+                conditions.add("status = $" + paramIndex);
+                paramIndex++;
+                params.add(mapStatusFilter(statusFilter));
             }
         }
 
@@ -201,11 +204,13 @@ public class R2dbcOutboxRepository implements OutboxRepository {
 
         String finalSql = sql.toString();
 
-        return Flux.usingWhen(
+        List<OutboxEvent> result = Flux.usingWhen(
                 connectionFactory.create(),
                 conn -> executeFind(conn, finalSql, params),
                 conn -> Mono.from(conn.close())
         ).collectList().block();
+
+        return result != null ? result : List.of();
     }
 
     private Flux<OutboxEvent> executeFind(Connection conn, String sql, List<Object> params) {
@@ -219,6 +224,7 @@ public class R2dbcOutboxRepository implements OutboxRepository {
     }
 
     private String mapStatusFilter(OutboxStatusFilter filter) {
+        Objects.requireNonNull(filter, "filter");
         return switch (filter) {
             case PENDING -> STATUS_PENDING;
             case PUBLISHED -> "PUBLISHED";
@@ -394,18 +400,18 @@ public class R2dbcOutboxRepository implements OutboxRepository {
 
         StringBuilder sql = new StringBuilder("DELETE FROM ").append(tableName);
         List<Object> params = new ArrayList<>();
-        int paramIndex = 1;
 
         List<String> conditions = new ArrayList<>();
 
-        if (query.statusFilter() != null) {
-            if (query.statusFilter() == OutboxStatusFilter.RETRYABLE) {
-                conditions.add("status IN ($" + paramIndex++ + ", $" + paramIndex++ + ")");
+        OutboxStatusFilter statusFilter = query.statusFilter();
+        if (statusFilter != null) {
+            if (statusFilter == OutboxStatusFilter.RETRYABLE) {
+                conditions.add("status IN ($1, $2)");
                 params.add(STATUS_PENDING);
                 params.add(STATUS_FAILED);
             } else {
-                conditions.add("status = $" + paramIndex++);
-                params.add(mapStatusFilter(query.statusFilter()));
+                conditions.add("status = $1");
+                params.add(mapStatusFilter(statusFilter));
             }
         }
 
@@ -471,21 +477,24 @@ public class R2dbcOutboxRepository implements OutboxRepository {
         }
 
         return Flux.from(stmt.execute())
-                .flatMap(result -> result.map((row, meta) -> row.get(0, Long.class)))
+                .flatMap(result -> result.map((row, meta) -> {
+                    Long count = row.get(0, Long.class);
+                    return count != null ? count : 0L;
+                }))
                 .singleOrEmpty();
     }
 
     private OutboxEvent mapRowToEvent(Row row, RowMetadata metadata) {
-        UUID id = row.get("id", UUID.class);
-        String aggregateType = row.get("aggregate_type", String.class);
-        String aggregateId = row.get("aggregate_id", String.class);
-        String eventType = row.get("event_type", String.class);
-        String topic = row.get("topic", String.class);
+        UUID id = Objects.requireNonNull(row.get("id", UUID.class), "id cannot be null");
+        String aggregateType = Objects.requireNonNull(row.get("aggregate_type", String.class), "aggregate_type cannot be null");
+        String aggregateId = Objects.requireNonNull(row.get("aggregate_id", String.class), "aggregate_id cannot be null");
+        String eventType = Objects.requireNonNull(row.get("event_type", String.class), "event_type cannot be null");
+        String topic = Objects.requireNonNull(row.get("topic", String.class), "topic cannot be null");
         String partitionKey = row.get("partition_key", String.class);
-        byte[] payload = row.get("payload", byte[].class);
+        byte[] payload = Objects.requireNonNull(row.get("payload", byte[].class), "payload cannot be null");
         String headersJson = row.get("headers", String.class);
-        Instant createdAt = row.get("created_at", Instant.class);
-        String statusStr = row.get("status", String.class);
+        Instant createdAt = Objects.requireNonNull(row.get("created_at", Instant.class), "created_at cannot be null");
+        String statusStr = Objects.requireNonNull(row.get("status", String.class), "status cannot be null");
         Integer retryCount = row.get("retry_count", Integer.class);
         String lastError = row.get("last_error", String.class);
         Instant processedAt = row.get("processed_at", Instant.class);
@@ -514,7 +523,6 @@ public class R2dbcOutboxRepository implements OutboxRepository {
                                    @Nullable String lastError,
                                    @Nullable Integer retryCount) {
         return switch (statusStr) {
-            case STATUS_PENDING -> Pending.at(createdAt != null ? createdAt : Instant.now());
             case "PUBLISHED" -> Published.at(processedAt != null ? processedAt : Instant.now());
             case STATUS_FAILED -> new Failed(
                     lastError != null ? lastError : "Unknown error",
@@ -525,7 +533,7 @@ public class R2dbcOutboxRepository implements OutboxRepository {
                     processedAt != null ? processedAt : Instant.now(),
                     lastError
             );
-            default -> Pending.create();
+            default -> Pending.at(createdAt); // Includes PENDING and unknown statuses
         };
     }
 }

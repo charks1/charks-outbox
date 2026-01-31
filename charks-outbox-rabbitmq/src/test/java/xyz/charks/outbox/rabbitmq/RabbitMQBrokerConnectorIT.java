@@ -133,12 +133,12 @@ class RabbitMQBrokerConnectorIT {
             AMQP.BasicProperties props = receivedMessage.get().getProps();
             Map<String, Object> headers = props.getHeaders();
 
-            assertThat(headers.get("eventId").toString()).isEqualTo(event.id().value().toString());
-            assertThat(headers.get("aggregateType").toString()).isEqualTo("Order");
-            assertThat(headers.get("aggregateId").toString()).isEqualTo("order-123");
-            assertThat(headers.get("eventType").toString()).isEqualTo("OrderCreated");
-            assertThat(headers.get("createdAt").toString()).isEqualTo(event.createdAt().toString());
-            assertThat(headers.get("traceId").toString()).isEqualTo("trace-abc");
+            assertThat(headers.get("eventId")).hasToString(event.id().value().toString());
+            assertThat(headers.get("aggregateType")).hasToString("Order");
+            assertThat(headers.get("aggregateId")).hasToString("order-123");
+            assertThat(headers.get("eventType")).hasToString("OrderCreated");
+            assertThat(headers.get("createdAt")).hasToString(event.createdAt().toString());
+            assertThat(headers.get("traceId")).hasToString("trace-abc");
             assertThat(props.getMessageId()).isEqualTo(event.id().value().toString());
         }
 

@@ -119,21 +119,28 @@ class RetryPolicyTest {
 
         @Test
         void shouldRejectInvalidMaxAttempts() {
-            assertThatThrownBy(() -> ExponentialBackoff.builder().maxAttempts(0))
+            var builder = ExponentialBackoff.builder();
+
+            assertThatThrownBy(() -> builder.maxAttempts(0))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage("Max attempts must be positive");
         }
 
         @Test
         void shouldRejectNegativeBaseDelay() {
-            assertThatThrownBy(() -> ExponentialBackoff.builder().baseDelay(Duration.ofSeconds(-1)))
+            var builder = ExponentialBackoff.builder();
+            Duration negativeDelay = Duration.ofSeconds(-1);
+
+            assertThatThrownBy(() -> builder.baseDelay(negativeDelay))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage("Base delay cannot be negative");
         }
 
         @Test
         void shouldRejectInvalidJitterFactor() {
-            assertThatThrownBy(() -> ExponentialBackoff.builder().jitterFactor(1.5))
+            var builder = ExponentialBackoff.builder();
+
+            assertThatThrownBy(() -> builder.jitterFactor(1.5))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage("Jitter factor must be between 0 and 1");
         }
@@ -183,6 +190,7 @@ class RetryPolicyTest {
         }
 
         @Test
+        @SuppressWarnings("DataFlowIssue")
         void shouldRejectNullDelay() {
             assertThatThrownBy(() -> FixedDelay.of(null, 3))
                     .isInstanceOf(NullPointerException.class)
@@ -191,14 +199,18 @@ class RetryPolicyTest {
 
         @Test
         void shouldRejectNegativeDelay() {
-            assertThatThrownBy(() -> FixedDelay.of(Duration.ofSeconds(-1), 3))
+            Duration negativeDelay = Duration.ofSeconds(-1);
+
+            assertThatThrownBy(() -> FixedDelay.of(negativeDelay, 3))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage("Delay cannot be negative");
         }
 
         @Test
         void shouldRejectInvalidMaxAttempts() {
-            assertThatThrownBy(() -> FixedDelay.of(Duration.ofSeconds(1), 0))
+            Duration delay = Duration.ofSeconds(1);
+
+            assertThatThrownBy(() -> FixedDelay.of(delay, 0))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage("Max attempts must be positive");
         }
@@ -227,7 +239,10 @@ class RetryPolicyTest {
 
         @Test
         void shouldBeSingleton() {
-            assertThat(NoRetry.instance()).isSameAs(NoRetry.instance());
+            NoRetry first = NoRetry.instance();
+            NoRetry second = NoRetry.instance();
+
+            assertThat(first).isSameAs(second);
         }
     }
 }

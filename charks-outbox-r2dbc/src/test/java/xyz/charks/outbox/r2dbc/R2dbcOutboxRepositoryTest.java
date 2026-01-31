@@ -84,6 +84,7 @@ class R2dbcOutboxRepositoryTest {
 
         @Test
         @DisplayName("throws exception for null config")
+        @SuppressWarnings("DataFlowIssue")
         void nullConfig() {
             assertThatThrownBy(() -> new R2dbcOutboxRepository(null))
                     .isInstanceOf(NullPointerException.class);
@@ -96,6 +97,7 @@ class R2dbcOutboxRepositoryTest {
 
         @Test
         @DisplayName("throws exception for null event")
+        @SuppressWarnings("DataFlowIssue")
         void nullEvent() {
             assertThatThrownBy(() -> repository.save(null))
                     .isInstanceOf(NullPointerException.class);
@@ -109,9 +111,9 @@ class R2dbcOutboxRepositoryTest {
             setupExecuteWithRowsUpdated(1L);
 
             OutboxEvent event = createTestEvent();
-            OutboxEvent result = repository.save(event);
+            OutboxEvent savedEvent = repository.save(event);
 
-            assertThat(result).isEqualTo(event);
+            assertThat(savedEvent).isEqualTo(event);
             verify(statement).execute();
         }
 
@@ -131,9 +133,9 @@ class R2dbcOutboxRepositoryTest {
                     .payload("{}".getBytes(StandardCharsets.UTF_8))
                     .build();
 
-            OutboxEvent result = repository.save(event);
+            OutboxEvent savedEvent = repository.save(event);
 
-            assertThat(result.partitionKey()).isNull();
+            assertThat(savedEvent.partitionKey()).isNull();
             verify(statement, atLeastOnce()).bindNull(anyString(), any(Class.class));
         }
 
@@ -153,9 +155,9 @@ class R2dbcOutboxRepositoryTest {
                     .headers(Map.of("key1", "value1"))
                     .build();
 
-            OutboxEvent result = repository.save(event);
+            OutboxEvent savedEvent = repository.save(event);
 
-            assertThat(result.headers()).containsEntry("key1", "value1");
+            assertThat(savedEvent.headers()).containsEntry("key1", "value1");
         }
     }
 
@@ -165,6 +167,7 @@ class R2dbcOutboxRepositoryTest {
 
         @Test
         @DisplayName("throws exception for null list")
+        @SuppressWarnings("DataFlowIssue")
         void nullList() {
             assertThatThrownBy(() -> repository.saveAll(null))
                     .isInstanceOf(NullPointerException.class);
@@ -173,9 +176,9 @@ class R2dbcOutboxRepositoryTest {
         @Test
         @DisplayName("returns empty list for empty input")
         void emptyInput() {
-            List<OutboxEvent> result = repository.saveAll(List.of());
+            List<OutboxEvent> savedEvents = repository.saveAll(List.of());
 
-            assertThat(result).isEmpty();
+            assertThat(savedEvents).isEmpty();
         }
 
         @Test
@@ -186,9 +189,9 @@ class R2dbcOutboxRepositoryTest {
             setupExecuteWithRowsUpdated(1L);
 
             List<OutboxEvent> events = List.of(createTestEvent(), createTestEvent());
-            List<OutboxEvent> result = repository.saveAll(events);
+            List<OutboxEvent> savedEvents = repository.saveAll(events);
 
-            assertThat(result).hasSize(2);
+            assertThat(savedEvents).hasSize(2);
         }
     }
 
@@ -198,6 +201,7 @@ class R2dbcOutboxRepositoryTest {
 
         @Test
         @DisplayName("throws exception for null id")
+        @SuppressWarnings("DataFlowIssue")
         void nullId() {
             assertThatThrownBy(() -> repository.findById(null))
                     .isInstanceOf(NullPointerException.class);
@@ -205,6 +209,7 @@ class R2dbcOutboxRepositoryTest {
 
         @Test
         @DisplayName("returns empty when not found")
+        @SuppressWarnings("unchecked")
         void returnsEmptyWhenNotFound() {
             setupConnectionMock();
             setupStatementMock();
@@ -220,6 +225,7 @@ class R2dbcOutboxRepositoryTest {
 
         @Test
         @DisplayName("returns event when found")
+        @SuppressWarnings("unchecked")
         void returnsEventWhenFound() {
             setupConnectionMock();
             setupStatementMock();
@@ -256,6 +262,7 @@ class R2dbcOutboxRepositoryTest {
 
         @Test
         @DisplayName("throws exception for null query")
+        @SuppressWarnings("DataFlowIssue")
         void nullQuery() {
             assertThatThrownBy(() -> repository.find(null))
                     .isInstanceOf(NullPointerException.class);
@@ -263,6 +270,7 @@ class R2dbcOutboxRepositoryTest {
 
         @Test
         @DisplayName("finds events with pending status filter")
+        @SuppressWarnings("unchecked")
         void findsPendingEvents() {
             setupConnectionMock();
             setupStatementMock();
@@ -280,6 +288,7 @@ class R2dbcOutboxRepositoryTest {
 
         @Test
         @DisplayName("finds events with aggregate type filter")
+        @SuppressWarnings("unchecked")
         void findsEventsWithAggregateType() {
             setupConnectionMock();
             setupStatementMock();
@@ -300,6 +309,7 @@ class R2dbcOutboxRepositoryTest {
 
         @Test
         @DisplayName("returns empty list when no events found")
+        @SuppressWarnings("unchecked")
         void returnsEmptyList() {
             setupConnectionMock();
             setupStatementMock();
@@ -320,6 +330,7 @@ class R2dbcOutboxRepositoryTest {
 
         @Test
         @DisplayName("throws exception for null event")
+        @SuppressWarnings("DataFlowIssue")
         void nullEvent() {
             assertThatThrownBy(() -> repository.update(null))
                     .isInstanceOf(NullPointerException.class);
@@ -347,9 +358,9 @@ class R2dbcOutboxRepositoryTest {
             setupExecuteWithRowsUpdated(1L);
 
             OutboxEvent event = createTestEvent();
-            OutboxEvent result = repository.update(event);
+            OutboxEvent updatedEvent = repository.update(event);
 
-            assertThat(result).isEqualTo(event);
+            assertThat(updatedEvent).isEqualTo(event);
             verify(statement).execute();
         }
     }
@@ -360,24 +371,30 @@ class R2dbcOutboxRepositoryTest {
 
         @Test
         @DisplayName("throws exception for null ids")
+        @SuppressWarnings("DataFlowIssue")
         void nullIds() {
-            assertThatThrownBy(() -> repository.updateStatus(null, Published.now()))
+            OutboxStatus status = Published.now();
+
+            assertThatThrownBy(() -> repository.updateStatus(null, status))
                     .isInstanceOf(NullPointerException.class);
         }
 
         @Test
         @DisplayName("throws exception for null status")
+        @SuppressWarnings("DataFlowIssue")
         void nullStatus() {
-            assertThatThrownBy(() -> repository.updateStatus(List.of(), null))
+            List<OutboxEventId> ids = List.of();
+
+            assertThatThrownBy(() -> repository.updateStatus(ids, null))
                     .isInstanceOf(NullPointerException.class);
         }
 
         @Test
         @DisplayName("returns zero for empty list")
         void emptyList() {
-            int result = repository.updateStatus(List.of(), Published.now());
+            int updatedCount = repository.updateStatus(List.of(), Published.now());
 
-            assertThat(result).isZero();
+            assertThat(updatedCount).isZero();
         }
 
         @Test
@@ -387,12 +404,12 @@ class R2dbcOutboxRepositoryTest {
             setupStatementMock();
             setupExecuteWithRowsUpdated(1L);
 
-            int result = repository.updateStatus(
+            int updatedCount = repository.updateStatus(
                     List.of(OutboxEventId.generate(), OutboxEventId.generate()),
                     Published.now()
             );
 
-            assertThat(result).isEqualTo(2);
+            assertThat(updatedCount).isEqualTo(2);
         }
     }
 
@@ -402,6 +419,7 @@ class R2dbcOutboxRepositoryTest {
 
         @Test
         @DisplayName("throws exception for null id")
+        @SuppressWarnings("DataFlowIssue")
         void nullId() {
             assertThatThrownBy(() -> repository.deleteById(null))
                     .isInstanceOf(NullPointerException.class);
@@ -414,9 +432,9 @@ class R2dbcOutboxRepositoryTest {
             setupStatementMock();
             setupExecuteWithRowsUpdated(1L);
 
-            boolean result = repository.deleteById(OutboxEventId.generate());
+            boolean deleted = repository.deleteById(OutboxEventId.generate());
 
-            assertThat(result).isTrue();
+            assertThat(deleted).isTrue();
         }
 
         @Test
@@ -426,9 +444,9 @@ class R2dbcOutboxRepositoryTest {
             setupStatementMock();
             setupExecuteWithRowsUpdated(0L);
 
-            boolean result = repository.deleteById(OutboxEventId.generate());
+            boolean deleted = repository.deleteById(OutboxEventId.generate());
 
-            assertThat(result).isFalse();
+            assertThat(deleted).isFalse();
         }
     }
 
@@ -438,6 +456,7 @@ class R2dbcOutboxRepositoryTest {
 
         @Test
         @DisplayName("throws exception for null query")
+        @SuppressWarnings("DataFlowIssue")
         void nullQuery() {
             assertThatThrownBy(() -> repository.delete(null))
                     .isInstanceOf(NullPointerException.class);
@@ -450,9 +469,9 @@ class R2dbcOutboxRepositoryTest {
             setupStatementMock();
             setupExecuteWithRowsUpdated(3L);
 
-            int result = repository.delete(OutboxQuery.pending(100));
+            int deletedCount = repository.delete(OutboxQuery.pending(100));
 
-            assertThat(result).isEqualTo(3);
+            assertThat(deletedCount).isEqualTo(3);
         }
 
         @Test
@@ -462,9 +481,9 @@ class R2dbcOutboxRepositoryTest {
             setupStatementMock();
             setupExecuteWithRowsUpdated(5L);
 
-            int result = repository.delete(OutboxQuery.builder().limit(100).build());
+            int deletedCount = repository.delete(OutboxQuery.builder().limit(100).build());
 
-            assertThat(result).isEqualTo(5);
+            assertThat(deletedCount).isEqualTo(5);
         }
     }
 
@@ -474,6 +493,7 @@ class R2dbcOutboxRepositoryTest {
 
         @Test
         @DisplayName("returns count value")
+        @SuppressWarnings("unchecked")
         void returnsCountValue() {
             setupConnectionMock();
             setupStatementMock();
@@ -489,6 +509,7 @@ class R2dbcOutboxRepositoryTest {
 
         @Test
         @DisplayName("counts with pending status filter")
+        @SuppressWarnings("unchecked")
         void countsPendingEvents() {
             setupConnectionMock();
             setupStatementMock();
@@ -504,6 +525,7 @@ class R2dbcOutboxRepositoryTest {
 
         @Test
         @DisplayName("returns zero when no results")
+        @SuppressWarnings("unchecked")
         void returnsZeroWhenNoResults() {
             setupConnectionMock();
             setupStatementMock();
@@ -519,6 +541,7 @@ class R2dbcOutboxRepositoryTest {
 
         @Test
         @DisplayName("counts with published status filter")
+        @SuppressWarnings("unchecked")
         void countsPublishedEvents() {
             setupConnectionMock();
             setupStatementMock();
@@ -534,6 +557,7 @@ class R2dbcOutboxRepositoryTest {
 
         @Test
         @DisplayName("counts with failed status filter")
+        @SuppressWarnings("unchecked")
         void countsFailedEvents() {
             setupConnectionMock();
             setupStatementMock();
@@ -549,6 +573,7 @@ class R2dbcOutboxRepositoryTest {
 
         @Test
         @DisplayName("counts with archived status filter")
+        @SuppressWarnings("unchecked")
         void countsArchivedEvents() {
             setupConnectionMock();
             setupStatementMock();
@@ -564,6 +589,7 @@ class R2dbcOutboxRepositoryTest {
 
         @Test
         @DisplayName("counts with retryable status filter")
+        @SuppressWarnings("unchecked")
         void countsRetryableEvents() {
             setupConnectionMock();
             setupStatementMock();
@@ -606,7 +632,9 @@ class R2dbcOutboxRepositoryTest {
         @Test
         @DisplayName("throws exception for null connectionFactory")
         void throwsExceptionForNullConnectionFactory() {
-            assertThatThrownBy(() -> R2dbcOutboxConfig.builder().build())
+            var builder = R2dbcOutboxConfig.builder();
+
+            assertThatThrownBy(builder::build)
                     .isInstanceOf(NullPointerException.class);
         }
     }

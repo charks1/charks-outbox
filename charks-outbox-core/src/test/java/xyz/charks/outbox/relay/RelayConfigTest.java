@@ -47,50 +47,67 @@ class RelayConfigTest {
 
     @Test
     void shouldRejectNonPositiveBatchSize() {
-        assertThatThrownBy(() -> RelayConfig.builder().batchSize(0).build())
+        var zeroBuilder = RelayConfig.builder().batchSize(0);
+        var negativeBuilder = RelayConfig.builder().batchSize(-1);
+
+        assertThatThrownBy(zeroBuilder::build)
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Batch size must be positive");
 
-        assertThatThrownBy(() -> RelayConfig.builder().batchSize(-1).build())
+        assertThatThrownBy(negativeBuilder::build)
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Batch size must be positive");
     }
 
     @Test
     void shouldRejectNonPositivePollingInterval() {
-        assertThatThrownBy(() -> RelayConfig.builder().pollingInterval(Duration.ZERO).build())
+        var zeroBuilder = RelayConfig.builder().pollingInterval(Duration.ZERO);
+        var negativeBuilder = RelayConfig.builder().pollingInterval(Duration.ofSeconds(-1));
+
+        assertThatThrownBy(zeroBuilder::build)
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Polling interval must be positive");
 
-        assertThatThrownBy(() -> RelayConfig.builder().pollingInterval(Duration.ofSeconds(-1)).build())
+        assertThatThrownBy(negativeBuilder::build)
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Polling interval must be positive");
     }
 
     @Test
+    @SuppressWarnings("DataFlowIssue")
     void shouldRejectNullPollingInterval() {
-        assertThatThrownBy(() -> RelayConfig.builder().pollingInterval(null).build())
+        var builder = RelayConfig.builder().pollingInterval(null);
+
+        assertThatThrownBy(builder::build)
                 .isInstanceOf(NullPointerException.class)
                 .hasMessage("Polling interval cannot be null");
     }
 
     @Test
+    @SuppressWarnings("DataFlowIssue")
     void shouldRejectNullLockMode() {
-        assertThatThrownBy(() -> RelayConfig.builder().lockMode(null).build())
+        var builder = RelayConfig.builder().lockMode(null);
+
+        assertThatThrownBy(builder::build)
                 .isInstanceOf(NullPointerException.class)
                 .hasMessage("Lock mode cannot be null");
     }
 
     @Test
+    @SuppressWarnings("DataFlowIssue")
     void shouldRejectNullRetryPolicy() {
-        assertThatThrownBy(() -> RelayConfig.builder().retryPolicy(null).build())
+        var builder = RelayConfig.builder().retryPolicy(null);
+
+        assertThatThrownBy(builder::build)
                 .isInstanceOf(NullPointerException.class)
                 .hasMessage("Retry policy cannot be null");
     }
 
     @Test
     void shouldRejectNegativeShutdownTimeout() {
-        assertThatThrownBy(() -> RelayConfig.builder().shutdownTimeout(Duration.ofSeconds(-1)).build())
+        var builder = RelayConfig.builder().shutdownTimeout(Duration.ofSeconds(-1));
+
+        assertThatThrownBy(builder::build)
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Shutdown timeout cannot be negative");
     }

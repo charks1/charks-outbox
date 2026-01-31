@@ -83,10 +83,11 @@ class KafkaConfigTest {
 
         @Test
         @DisplayName("rejects null bootstrap servers")
+        @SuppressWarnings("DataFlowIssue")
         void nullBootstrapServers() {
-            assertThatThrownBy(() -> KafkaConfig.builder()
-                    .bootstrapServers(null)
-                    .build())
+            var builder = KafkaConfig.builder().bootstrapServers(null);
+
+            assertThatThrownBy(builder::build)
                     .isInstanceOf(NullPointerException.class)
                     .hasMessageContaining("Bootstrap servers");
         }
@@ -94,9 +95,9 @@ class KafkaConfigTest {
         @Test
         @DisplayName("rejects blank bootstrap servers")
         void blankBootstrapServers() {
-            assertThatThrownBy(() -> KafkaConfig.builder()
-                    .bootstrapServers("  ")
-                    .build())
+            var builder = KafkaConfig.builder().bootstrapServers("  ");
+
+            assertThatThrownBy(builder::build)
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("blank");
         }
@@ -104,9 +105,9 @@ class KafkaConfigTest {
         @Test
         @DisplayName("rejects negative retries")
         void negativeRetries() {
-            assertThatThrownBy(() -> KafkaConfig.builder()
-                    .retries(-1)
-                    .build())
+            var builder = KafkaConfig.builder().retries(-1);
+
+            assertThatThrownBy(builder::build)
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("negative");
         }
@@ -177,8 +178,9 @@ class KafkaConfigTest {
             KafkaConfig config = KafkaConfig.builder()
                     .property("key", "value")
                     .build();
+            Map<String, Object> properties = config.additionalProperties();
 
-            assertThatThrownBy(() -> config.additionalProperties().put("new", "value"))
+            assertThatThrownBy(() -> properties.put("new", "value"))
                     .isInstanceOf(UnsupportedOperationException.class);
         }
     }
