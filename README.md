@@ -23,10 +23,10 @@ In distributed systems, ensuring reliable message delivery while maintaining dat
 ## Features
 
 - **Zero dependencies in core** - The core module has no external dependencies
-- **Multiple storage backends** - JDBC, R2DBC, MongoDB (planned)
-- **Multiple message brokers** - Kafka, RabbitMQ, Pulsar, SQS, NATS (planned)
+- **Multiple storage backends** - JDBC, R2DBC, MongoDB
+- **Multiple message brokers** - Kafka, RabbitMQ, Pulsar, SQS, NATS
 - **Pluggable serialization** - JSON (Jackson), Avro, Protobuf
-- **Observable** - Micrometer and OpenTelemetry support (planned)
+- **Observable** - Micrometer and OpenTelemetry support
 - **Production-ready** - Distributed locking, retry policies, graceful shutdown
 - **Spring Boot starter** - Auto-configuration for Spring Boot applications
 
@@ -177,10 +177,21 @@ charks:
 |--------|-------------|
 | `charks-outbox-core` | Core API and domain model (zero dependencies) |
 | `charks-outbox-jdbc` | JDBC repository implementation |
+| `charks-outbox-r2dbc` | Reactive R2DBC repository implementation |
+| `charks-outbox-mongodb` | MongoDB repository implementation |
 | `charks-outbox-kafka` | Kafka broker connector |
+| `charks-outbox-rabbitmq` | RabbitMQ broker connector |
+| `charks-outbox-pulsar` | Apache Pulsar broker connector |
+| `charks-outbox-sqs` | AWS SQS broker connector |
+| `charks-outbox-nats` | NATS broker connector |
 | `charks-outbox-serializer-json` | Jackson JSON serializer |
-| `charks-outbox-test` | Testing utilities |
+| `charks-outbox-serializer-avro` | Apache Avro serializer |
+| `charks-outbox-serializer-protobuf` | Protocol Buffers serializer |
+| `charks-outbox-micrometer` | Micrometer metrics integration |
+| `charks-outbox-opentelemetry` | OpenTelemetry tracing integration |
 | `charks-outbox-spring-boot-starter` | Spring Boot auto-configuration |
+| `charks-outbox-quarkus` | Quarkus extension |
+| `charks-outbox-test` | Testing utilities and mocks |
 
 ## Documentation
 
