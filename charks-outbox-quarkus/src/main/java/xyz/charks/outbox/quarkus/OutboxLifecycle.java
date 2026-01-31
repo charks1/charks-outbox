@@ -24,6 +24,12 @@ public class OutboxLifecycle {
     private final Instance<OutboxRelay> relayInstance;
     private final OutboxConfiguration config;
 
+    /**
+     * Creates a new outbox lifecycle manager.
+     *
+     * @param relayInstance the relay instance provider
+     * @param config the outbox configuration
+     */
     @Inject
     public OutboxLifecycle(Instance<OutboxRelay> relayInstance, OutboxConfiguration config) {
         this.relayInstance = relayInstance;

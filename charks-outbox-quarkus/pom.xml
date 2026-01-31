@@ -7,7 +7,7 @@
     <parent>
         <groupId>xyz.charks</groupId>
         <artifactId>charks-outbox</artifactId>
-        <version>1.0.0</version>
+        <version>1.0.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>charks-outbox-quarkus</artifactId>

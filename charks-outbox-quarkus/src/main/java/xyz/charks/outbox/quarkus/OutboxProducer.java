@@ -28,6 +28,13 @@ public class OutboxProducer {
     private final Instance<OutboxRepository> repositoryInstance;
     private final Instance<BrokerConnector> connectorInstance;
 
+    /**
+     * Creates a new outbox producer.
+     *
+     * @param config the outbox configuration
+     * @param repositoryInstance the repository instance provider
+     * @param connectorInstance the broker connector instance provider
+     */
     @Inject
     public OutboxProducer(
             OutboxConfiguration config,
