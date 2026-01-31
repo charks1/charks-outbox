@@ -71,6 +71,7 @@ class PublishResultTest {
     }
 
     @Test
+    @SuppressWarnings("DataFlowIssue")
     void shouldRejectNullEventId() {
         assertThatThrownBy(() -> PublishResult.success(null))
                 .isInstanceOf(NullPointerException.class)
@@ -78,6 +79,7 @@ class PublishResultTest {
     }
 
     @Test
+    @SuppressWarnings("DataFlowIssue")
     void shouldRejectNullErrorMessage() {
         OutboxEventId eventId = OutboxEventId.generate();
 
@@ -111,7 +113,6 @@ class PublishResultTest {
         PublishResult result1 = new PublishResult(eventId, true, timestamp, "msg-1", 0, 100L, null);
         PublishResult result2 = new PublishResult(eventId, true, timestamp, "msg-1", 0, 100L, null);
 
-        assertThat(result1).isEqualTo(result2);
-        assertThat(result1.hashCode()).isEqualTo(result2.hashCode());
+        assertThat(result1).isEqualTo(result2).hasSameHashCodeAs(result2);
     }
 }

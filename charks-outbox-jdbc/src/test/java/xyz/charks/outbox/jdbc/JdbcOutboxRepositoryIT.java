@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class JdbcOutboxRepositoryIT {
 
     @Container
+    @SuppressWarnings("resource") // Lifecycle managed by Testcontainers
     static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
             .withDatabaseName("testdb")
             .withUsername("test")
@@ -59,6 +60,7 @@ class JdbcOutboxRepositoryIT {
     }
 
     @AfterEach
+    @SuppressWarnings("SqlNoDataSourceInspection") // Datasource configured at runtime via Testcontainers
     void cleanup() throws Exception {
         try (Connection conn = dataSource.getConnection();
              Statement stmt = conn.createStatement()) {
@@ -126,6 +128,7 @@ class JdbcOutboxRepositoryIT {
 
         @Test
         @DisplayName("throws exception for null event")
+        @SuppressWarnings("DataFlowIssue")
         void nullEvent() {
             assertThatThrownBy(() -> repository.save(null))
                     .isInstanceOf(NullPointerException.class);
@@ -202,8 +205,7 @@ class JdbcOutboxRepositoryIT {
 
             List<OutboxEvent> events = repository.find(query);
 
-            assertThat(events).hasSize(3);
-            assertThat(events).allMatch(e -> e.status() instanceof Pending);
+            assertThat(events).hasSize(3).allMatch(e -> e.status() instanceof Pending);
         }
 
         @Test
@@ -229,8 +231,7 @@ class JdbcOutboxRepositoryIT {
 
             List<OutboxEvent> events = repository.find(query);
 
-            assertThat(events).hasSize(2);
-            assertThat(events).allMatch(e -> e.aggregateType().equals("Order"));
+            assertThat(events).hasSize(2).allMatch(e -> e.aggregateType().equals("Order"));
         }
 
         @Test
@@ -264,9 +265,11 @@ class JdbcOutboxRepositoryIT {
         @DisplayName("orders by created_at ascending")
         void ordersAscending() throws Exception {
             cleanup();
-            OutboxEvent first = createTestEvent("first");
-            Thread.sleep(10);
-            OutboxEvent second = createTestEvent("second");
+            Instant earlier = Instant.now().minusSeconds(10);
+            Instant later = Instant.now();
+
+            OutboxEvent first = createTestEvent("first").toBuilder().createdAt(earlier).build();
+            OutboxEvent second = createTestEvent("second").toBuilder().createdAt(later).build();
 
             repository.save(first);
             repository.save(second);

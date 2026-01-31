@@ -210,20 +210,34 @@ public record OutboxEvent(
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof OutboxEvent that)) return false;
-        return retryCount == that.retryCount
-                && Objects.equals(id, that.id)
-                && Objects.equals(aggregateType, that.aggregateType)
-                && Objects.equals(aggregateId, that.aggregateId)
-                && Objects.equals(eventType, that.eventType)
-                && Objects.equals(topic, that.topic)
-                && Objects.equals(partitionKey, that.partitionKey)
-                && Arrays.equals(payload, that.payload)
-                && Objects.equals(headers, that.headers)
-                && Objects.equals(createdAt, that.createdAt)
-                && Objects.equals(status, that.status)
-                && Objects.equals(lastError, that.lastError)
-                && Objects.equals(processedAt, that.processedAt);
+        if (!(o instanceof OutboxEvent(
+                OutboxEventId otherId,
+                String otherAggregateType,
+                AggregateId otherAggregateId,
+                EventType otherEventType,
+                String otherTopic,
+                String otherPartitionKey,
+                byte[] otherPayload,
+                Map<String, String> otherHeaders,
+                Instant otherCreatedAt,
+                OutboxStatus otherStatus,
+                int otherRetryCount,
+                String otherLastError,
+                Instant otherProcessedAt
+        ))) return false;
+        return retryCount == otherRetryCount
+                && Objects.equals(id, otherId)
+                && Objects.equals(aggregateType, otherAggregateType)
+                && Objects.equals(aggregateId, otherAggregateId)
+                && Objects.equals(eventType, otherEventType)
+                && Objects.equals(topic, otherTopic)
+                && Objects.equals(partitionKey, otherPartitionKey)
+                && Arrays.equals(payload, otherPayload)
+                && Objects.equals(headers, otherHeaders)
+                && Objects.equals(createdAt, otherCreatedAt)
+                && Objects.equals(status, otherStatus)
+                && Objects.equals(lastError, otherLastError)
+                && Objects.equals(processedAt, otherProcessedAt);
     }
 
     @Override

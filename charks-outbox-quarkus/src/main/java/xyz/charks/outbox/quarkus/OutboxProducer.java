@@ -4,6 +4,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import xyz.charks.outbox.broker.BrokerConnector;
@@ -68,7 +69,7 @@ public class OutboxProducer {
      */
     @Produces
     @ApplicationScoped
-    public OutboxRelay outboxRelay(RelayConfig relayConfig) {
+    public @Nullable OutboxRelay outboxRelay(RelayConfig relayConfig) {
         if (!config.enabled()) {
             LOG.info("Outbox relay is disabled");
             return null;
