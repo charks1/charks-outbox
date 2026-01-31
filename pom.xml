@@ -4,7 +4,7 @@
 
     <groupId>xyz.charks</groupId>
     <artifactId>charks-outbox</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Charks Outbox</name>
@@ -30,7 +30,7 @@
         <connection>scm:git:git://github.com/charks1/charks-outbox.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/charks1/charks-outbox.git</developerConnection>
         <url>https://github.com/charks1/charks-outbox/tree/main</url>
-        <tag>v1.0.1</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <modules>
