@@ -79,6 +79,8 @@ public final class ExponentialBackoff implements RetryPolicy {
         delayMillis = Math.min(delayMillis, maxDelay.toMillis());
 
         if (jitterFactor > 0) {
+            // S2245: ThreadLocalRandom is appropriate here - jitter for retry timing
+            // is not security-sensitive (no cryptographic use, no secret generation)
             double jitter = ThreadLocalRandom.current().nextDouble(0, jitterFactor);
             delayMillis = (long) (delayMillis * (1 + jitter));
         }
