@@ -17,6 +17,7 @@ class AggregateIdTest {
     }
 
     @Test
+    @SuppressWarnings("DataFlowIssue") // intentionally passing null to test rejection
     void shouldRejectNullValue() {
         assertThatThrownBy(() -> new AggregateId(null))
                 .isInstanceOf(NullPointerException.class)
@@ -47,6 +48,7 @@ class AggregateIdTest {
     }
 
     @Test
+    @SuppressWarnings("DataFlowIssue") // intentionally passing null to test rejection
     void shouldRejectNullObject() {
         assertThatThrownBy(() -> AggregateId.of(null))
                 .isInstanceOf(NullPointerException.class)
@@ -73,14 +75,13 @@ class AggregateIdTest {
         AggregateId id1 = new AggregateId("order-123");
         AggregateId id2 = new AggregateId("order-123");
 
-        assertThat(id1).isEqualTo(id2);
-        assertThat(id1.hashCode()).isEqualTo(id2.hashCode());
+        assertThat(id1).isEqualTo(id2).hasSameHashCodeAs(id2);
     }
 
     @Test
     void shouldReturnValueAsString() {
         AggregateId id = new AggregateId("order-123");
 
-        assertThat(id.toString()).isEqualTo("order-123");
+        assertThat(id).hasToString("order-123");
     }
 }

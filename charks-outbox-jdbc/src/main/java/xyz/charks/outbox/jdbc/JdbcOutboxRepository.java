@@ -72,9 +72,12 @@ import java.util.UUID;
  * @see JdbcOutboxConfig
  * @see SqlDialect
  */
+@SuppressWarnings("java:S2077") // tableName is validated in constructor via VALID_TABLE_NAME regex
 public final class JdbcOutboxRepository implements OutboxRepository {
 
     private static final Logger log = LoggerFactory.getLogger(JdbcOutboxRepository.class);
+    private static final java.util.regex.Pattern VALID_TABLE_NAME =
+            java.util.regex.Pattern.compile("^[a-zA-Z_]\\w*(\\.[a-zA-Z_]\\w*)?$");
 
     private final DataSource dataSource;
     private final JdbcOutboxConfig config;
@@ -91,8 +94,15 @@ public final class JdbcOutboxRepository implements OutboxRepository {
     public JdbcOutboxRepository(DataSource dataSource, JdbcOutboxConfig config) {
         this.dataSource = Objects.requireNonNull(dataSource, "DataSource cannot be null");
         this.config = Objects.requireNonNull(config, "Config cannot be null");
-        this.tableName = config.tableName();
+        this.tableName = validateTableName(config.tableName());
         this.dialect = config.dialect();
+    }
+
+    private static String validateTableName(String name) {
+        if (!VALID_TABLE_NAME.matcher(name).matches()) {
+            throw new IllegalArgumentException("Invalid table name: " + name);
+        }
+        return name;
     }
 
     /**
@@ -437,7 +447,7 @@ public final class JdbcOutboxRepository implements OutboxRepository {
                     processedAt != null ? processedAt.toInstant() : Instant.now(),
                     lastError
             );
-            default -> new Pending(createdAt);
+            default -> throw new IllegalStateException("Unknown status: " + statusName);
         };
     }
 
@@ -478,8 +488,9 @@ public final class JdbcOutboxRepository implements OutboxRepository {
     }
 
     private void addWhereConditions(OutboxQuery query, StringJoiner where, List<Object> params) {
-        if (query.statusFilter() != null) {
-            where.add(statusWhereClause(query.statusFilter()));
+        OutboxStatusFilter statusFilter = query.statusFilter();
+        if (statusFilter != null) {
+            where.add(statusWhereClause(statusFilter));
         }
 
         if (!query.aggregateTypes().isEmpty()) {

@@ -104,9 +104,7 @@ public class InMemoryOutboxRepository implements OutboxRepository {
 
         int updated = 0;
         for (OutboxEventId id : ids) {
-            OutboxEvent event = events.get(id);
-            if (event != null) {
-                events.put(id, event.withStatus(status));
+            if (events.computeIfPresent(id, (_, event) -> event.withStatus(status)) != null) {
                 updated++;
             }
         }
@@ -187,8 +185,9 @@ public class InMemoryOutboxRepository implements OutboxRepository {
     private Predicate<OutboxEvent> buildFilter(OutboxQuery query) {
         Predicate<OutboxEvent> filter = _ -> true;
 
-        if (query.statusFilter() != null) {
-            filter = filter.and(statusFilterPredicate(query.statusFilter()));
+        OutboxStatusFilter statusFilter = query.statusFilter();
+        if (statusFilter != null) {
+            filter = filter.and(statusFilterPredicate(statusFilter));
         }
 
         if (!query.aggregateTypes().isEmpty()) {

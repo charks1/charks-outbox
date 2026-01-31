@@ -57,6 +57,7 @@ class InMemoryOutboxRepositoryTest {
 
         @Test
         @DisplayName("rejects null event")
+        @SuppressWarnings("DataFlowIssue") // intentionally passing null to test rejection
         void rejectsNullEvent() {
             assertThatThrownBy(() -> repository.save(null))
                     .isInstanceOf(NullPointerException.class);
@@ -137,8 +138,9 @@ class InMemoryOutboxRepositoryTest {
 
             List<OutboxEvent> results = repository.find(query);
 
-            assertThat(results).hasSize(2);
-            assertThat(results).allMatch(e -> e.aggregateType().equals("Order"));
+            assertThat(results)
+                    .hasSize(2)
+                    .allMatch(e -> e.aggregateType().equals("Order"));
         }
 
         @Test

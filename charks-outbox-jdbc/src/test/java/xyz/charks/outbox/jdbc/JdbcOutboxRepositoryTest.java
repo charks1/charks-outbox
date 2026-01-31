@@ -262,8 +262,8 @@ class JdbcOutboxRepositoryTest {
         }
 
         @Test
-        @DisplayName("handles unknown status as PENDING")
-        void handlesUnknownStatus() throws SQLException {
+        @DisplayName("throws exception for unknown status")
+        void throwsOnUnknownStatus() throws SQLException {
             UUID eventId = UUID.randomUUID();
             Instant now = Instant.now();
             setupConnectionMocks();
@@ -271,10 +271,9 @@ class JdbcOutboxRepositoryTest {
             when(resultSet.next()).thenReturn(true);
             setupResultSetMocks(eventId, "UNKNOWN", now, null, null);
 
-            var result = repository.findById(new OutboxEventId(eventId));
-
-            assertThat(result).isPresent();
-            assertThat(result.get().status()).isInstanceOf(xyz.charks.outbox.core.Pending.class);
+            assertThatThrownBy(() -> repository.findById(new OutboxEventId(eventId)))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("Unknown status: UNKNOWN");
         }
 
         @Test

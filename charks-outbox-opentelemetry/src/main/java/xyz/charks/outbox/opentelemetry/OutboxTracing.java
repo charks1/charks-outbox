@@ -7,7 +7,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import xyz.charks.outbox.core.OutboxEvent;

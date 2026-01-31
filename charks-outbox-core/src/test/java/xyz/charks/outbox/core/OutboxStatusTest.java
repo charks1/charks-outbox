@@ -193,7 +193,7 @@ class OutboxStatusTest {
             case Pending p -> "pending since " + p.enqueuedAt();
             case Published p -> "published at " + p.publishedAt();
             case Failed f -> "failed: " + f.error();
-            case Archived a -> "archived";
+            case Archived _ -> "archived";
         };
 
         assertThat(result).startsWith("pending since ");

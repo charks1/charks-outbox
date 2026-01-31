@@ -47,7 +47,7 @@ class MockBrokerConnectorTest {
             connector.publish(event);
 
             assertThat(connector.publishedEvents()).hasSize(1);
-            assertThat(connector.publishedEvents().get(0)).isEqualTo(event);
+            assertThat(connector.publishedEvents().getFirst()).isEqualTo(event);
         }
 
         @Test
@@ -64,6 +64,7 @@ class MockBrokerConnectorTest {
 
         @Test
         @DisplayName("rejects null event")
+        @SuppressWarnings("DataFlowIssue") // intentionally passing null to test rejection
         void rejectsNullEvent() {
             assertThatThrownBy(() -> connector.publish(null))
                     .isInstanceOf(NullPointerException.class);
@@ -201,7 +202,7 @@ class MockBrokerConnectorTest {
             connector.publish(paymentsEvent);
 
             assertThat(connector.eventsForTopic("orders")).hasSize(1);
-            assertThat(connector.eventsForTopic("orders").get(0).topic()).isEqualTo("orders");
+            assertThat(connector.eventsForTopic("orders").getFirst().topic()).isEqualTo("orders");
         }
     }
 

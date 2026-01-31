@@ -1,7 +1,11 @@
 package xyz.charks.outbox.core;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -77,30 +81,11 @@ class HeadersCodecTest {
     @Nested
     class DeserializeTest {
 
-        @Test
-        void shouldDeserializeNull() {
-            Map<String, String> headers = HeadersCodec.deserialize(null);
-
-            assertThat(headers).isEmpty();
-        }
-
-        @Test
-        void shouldDeserializeEmptyString() {
-            Map<String, String> headers = HeadersCodec.deserialize("");
-
-            assertThat(headers).isEmpty();
-        }
-
-        @Test
-        void shouldDeserializeBlankString() {
-            Map<String, String> headers = HeadersCodec.deserialize("   ");
-
-            assertThat(headers).isEmpty();
-        }
-
-        @Test
-        void shouldDeserializeEmptyObject() {
-            Map<String, String> headers = HeadersCodec.deserialize("{}");
+        @ParameterizedTest(name = "should deserialize \"{0}\" to empty map")
+        @NullAndEmptySource
+        @ValueSource(strings = {"   ", "{}"})
+        void shouldDeserializeToEmptyMap(@Nullable String input) {
+            Map<String, String> headers = HeadersCodec.deserialize(input);
 
             assertThat(headers).isEmpty();
         }

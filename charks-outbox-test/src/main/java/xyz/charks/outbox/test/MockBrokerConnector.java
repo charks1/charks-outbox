@@ -5,13 +5,12 @@ import xyz.charks.outbox.broker.BrokerConnector;
 import xyz.charks.outbox.broker.PublishResult;
 import xyz.charks.outbox.core.OutboxEvent;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 /**
@@ -50,20 +49,13 @@ import java.util.function.Function;
 public class MockBrokerConnector implements BrokerConnector {
 
     private final List<OutboxEvent> publishedEvents = new CopyOnWriteArrayList<>();
-    private final AtomicInteger partitionCounter = new AtomicInteger(0);
     private final AtomicInteger offsetCounter = new AtomicInteger(0);
     private final AtomicBoolean healthy = new AtomicBoolean(true);
 
-    private volatile Function<OutboxEvent, PublishResult> publishBehavior;
+    private final AtomicReference<Function<OutboxEvent, PublishResult>> publishBehavior =
+            new AtomicReference<>(this::defaultPublish);
     private volatile @Nullable String nextFailureMessage;
-    private volatile int failCount;
-
-    /**
-     * Creates a new mock connector with default success behavior.
-     */
-    public MockBrokerConnector() {
-        this.publishBehavior = this::defaultPublish;
-    }
+    private final AtomicInteger failCount = new AtomicInteger(0);
 
     @Override
     public PublishResult publish(OutboxEvent event) {
@@ -71,16 +63,16 @@ public class MockBrokerConnector implements BrokerConnector {
 
         publishedEvents.add(event);
 
-        if (nextFailureMessage != null && failCount > 0) {
-            failCount--;
-            String message = nextFailureMessage;
-            if (failCount == 0) {
+        String message = nextFailureMessage;
+        if (message != null && failCount.get() > 0) {
+            int remaining = failCount.decrementAndGet();
+            if (remaining == 0) {
                 nextFailureMessage = null;
             }
             return PublishResult.failure(event.id(), message);
         }
 
-        return publishBehavior.apply(event);
+        return publishBehavior.get().apply(event);
     }
 
     @Override
@@ -99,7 +91,7 @@ public class MockBrokerConnector implements BrokerConnector {
      * @return unmodifiable list of published events
      */
     public List<OutboxEvent> publishedEvents() {
-        return Collections.unmodifiableList(new ArrayList<>(publishedEvents));
+        return List.copyOf(publishedEvents);
     }
 
     /**
@@ -116,11 +108,11 @@ public class MockBrokerConnector implements BrokerConnector {
      *
      * @return the last event, or null if none published
      */
-    public OutboxEvent lastPublished() {
+    public @Nullable OutboxEvent lastPublished() {
         if (publishedEvents.isEmpty()) {
             return null;
         }
-        return publishedEvents.get(publishedEvents.size() - 1);
+        return publishedEvents.getLast();
     }
 
     /**
@@ -139,7 +131,7 @@ public class MockBrokerConnector implements BrokerConnector {
      * @param message the error message
      */
     public void failNextPublishes(int count, String message) {
-        this.failCount = count;
+        this.failCount.set(count);
         this.nextFailureMessage = message;
     }
 
@@ -149,7 +141,7 @@ public class MockBrokerConnector implements BrokerConnector {
      * @param message the error message
      */
     public void failAllPublishes(String message) {
-        this.publishBehavior = event -> PublishResult.failure(event.id(), message);
+        this.publishBehavior.set(event -> PublishResult.failure(event.id(), message));
     }
 
     /**
@@ -158,16 +150,16 @@ public class MockBrokerConnector implements BrokerConnector {
      * @param behavior function that produces a PublishResult for each event
      */
     public void setPublishBehavior(Function<OutboxEvent, PublishResult> behavior) {
-        this.publishBehavior = Objects.requireNonNull(behavior, "Behavior cannot be null");
+        this.publishBehavior.set(Objects.requireNonNull(behavior, "Behavior cannot be null"));
     }
 
     /**
      * Resets to default success behavior.
      */
     public void succeedAllPublishes() {
-        this.publishBehavior = this::defaultPublish;
+        this.publishBehavior.set(this::defaultPublish);
         this.nextFailureMessage = null;
-        this.failCount = 0;
+        this.failCount.set(0);
     }
 
     /**
@@ -186,12 +178,11 @@ public class MockBrokerConnector implements BrokerConnector {
      */
     public void reset() {
         publishedEvents.clear();
-        partitionCounter.set(0);
         offsetCounter.set(0);
         healthy.set(true);
-        publishBehavior = this::defaultPublish;
+        publishBehavior.set(this::defaultPublish);
         nextFailureMessage = null;
-        failCount = 0;
+        failCount.set(0);
     }
 
     /**

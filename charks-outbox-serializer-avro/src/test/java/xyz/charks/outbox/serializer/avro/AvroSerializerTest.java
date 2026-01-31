@@ -54,6 +54,7 @@ class AvroSerializerTest {
 
         @Test
         @DisplayName("throws exception for null payload")
+        @SuppressWarnings("DataFlowIssue") // intentionally passing null to test rejection
         void nullPayload() {
             assertThatThrownBy(() -> serializer.serialize(null))
                     .isInstanceOf(NullPointerException.class)
@@ -113,6 +114,7 @@ class AvroSerializerTest {
 
         @Test
         @DisplayName("throws exception for null data")
+        @SuppressWarnings("DataFlowIssue") // intentionally passing null to test rejection
         void nullData() {
             assertThatThrownBy(() -> serializer.deserialize(null, byte[].class))
                     .isInstanceOf(NullPointerException.class)
@@ -121,6 +123,7 @@ class AvroSerializerTest {
 
         @Test
         @DisplayName("throws exception for null type")
+        @SuppressWarnings("DataFlowIssue") // intentionally passing null to test rejection
         void nullType() {
             assertThatThrownBy(() -> serializer.deserialize(new byte[0], null))
                     .isInstanceOf(NullPointerException.class)
@@ -183,6 +186,7 @@ class AvroSerializerTest {
 
         @Test
         @DisplayName("throws exception for null data")
+        @SuppressWarnings("DataFlowIssue") // intentionally passing null to test rejection
         void nullData() {
             assertThatThrownBy(() -> serializer.deserializeGeneric(null, testSchema))
                     .isInstanceOf(NullPointerException.class)
@@ -191,6 +195,7 @@ class AvroSerializerTest {
 
         @Test
         @DisplayName("throws exception for null schema")
+        @SuppressWarnings("DataFlowIssue") // intentionally passing null to test rejection
         void nullSchema() {
             assertThatThrownBy(() -> serializer.deserializeGeneric(new byte[0], null))
                     .isInstanceOf(NullPointerException.class)
@@ -207,7 +212,7 @@ class AvroSerializerTest {
             byte[] serialized = serializer.serialize(original);
             GenericRecord deserialized = serializer.deserializeGeneric(serialized, testSchema);
 
-            assertThat(deserialized.get("id").toString()).isEqualTo("test-123");
+            assertThat(deserialized.get("id")).hasToString("test-123");
             assertThat(deserialized.get("value")).isEqualTo(42);
         }
 
@@ -236,7 +241,7 @@ class AvroSerializerTest {
             byte[] serialized = serializer.serialize(original);
             GenericRecord deserialized = serializer.deserializeGeneric(serialized, testSchema);
 
-            assertThat(deserialized.get("id").toString()).isEqualTo("order-456");
+            assertThat(deserialized.get("id")).hasToString("order-456");
             assertThat(deserialized.get("value")).isEqualTo(100);
         }
 
@@ -252,7 +257,7 @@ class AvroSerializerTest {
             byte[] serialized2 = serializer.serialize(deserialized1);
             GenericRecord deserialized2 = serializer.deserializeGeneric(serialized2, testSchema);
 
-            assertThat(deserialized2.get("id").toString()).isEqualTo("multi-trip");
+            assertThat(deserialized2.get("id")).hasToString("multi-trip");
             assertThat(deserialized2.get("value")).isEqualTo(999);
         }
 

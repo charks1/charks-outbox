@@ -15,6 +15,7 @@ class EventTypeTest {
     }
 
     @Test
+    @SuppressWarnings("DataFlowIssue") // intentionally passing null to test rejection
     void shouldRejectNullValue() {
         assertThatThrownBy(() -> new EventType(null))
                 .isInstanceOf(NullPointerException.class)
@@ -40,6 +41,7 @@ class EventTypeTest {
     }
 
     @Test
+    @SuppressWarnings("DataFlowIssue") // intentionally passing null to test rejection
     void shouldRejectNullClass() {
         assertThatThrownBy(() -> EventType.fromClass(null))
                 .isInstanceOf(NullPointerException.class)
@@ -54,6 +56,7 @@ class EventTypeTest {
     }
 
     @Test
+    @SuppressWarnings("DataFlowIssue") // intentionally passing null to test rejection
     void shouldRejectNullClassForSimpleName() {
         assertThatThrownBy(() -> EventType.fromSimpleName(null))
                 .isInstanceOf(NullPointerException.class)
@@ -72,14 +75,13 @@ class EventTypeTest {
         EventType type1 = new EventType("OrderCreated");
         EventType type2 = new EventType("OrderCreated");
 
-        assertThat(type1).isEqualTo(type2);
-        assertThat(type1.hashCode()).isEqualTo(type2.hashCode());
+        assertThat(type1).isEqualTo(type2).hasSameHashCodeAs(type2);
     }
 
     @Test
     void shouldReturnValueAsString() {
         EventType type = new EventType("OrderCreated");
 
-        assertThat(type.toString()).isEqualTo("OrderCreated");
+        assertThat(type).hasToString("OrderCreated");
     }
 }

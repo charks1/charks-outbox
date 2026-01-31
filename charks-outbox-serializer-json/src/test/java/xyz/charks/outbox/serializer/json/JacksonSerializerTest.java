@@ -39,8 +39,9 @@ class JacksonSerializerTest {
             byte[] result = serializer.serialize(event);
 
             String json = new String(result, StandardCharsets.UTF_8);
-            assertThat(json).contains("\"id\":\"test-123\"");
-            assertThat(json).contains("\"message\":\"Hello\"");
+            assertThat(json)
+                    .contains("\"id\":\"test-123\"")
+                    .contains("\"message\":\"Hello\"");
         }
 
         @Test
@@ -54,9 +55,10 @@ class JacksonSerializerTest {
             byte[] result = serializer.serialize(event);
 
             String json = new String(result, StandardCharsets.UTF_8);
-            assertThat(json).contains("\"orderId\":\"order-1\"");
-            assertThat(json).contains("\"street\":\"123 Main St\"");
-            assertThat(json).contains("\"city\":\"New York\"");
+            assertThat(json)
+                    .contains("\"orderId\":\"order-1\"")
+                    .contains("\"street\":\"123 Main St\"")
+                    .contains("\"city\":\"New York\"");
         }
 
         @Test
@@ -78,8 +80,9 @@ class JacksonSerializerTest {
             byte[] result = serializer.serialize(event);
 
             String json = new String(result, StandardCharsets.UTF_8);
-            assertThat(json).contains("\"key1\":\"value1\"");
-            assertThat(json).contains("\"key2\":\"value2\"");
+            assertThat(json)
+                    .contains("\"key1\":\"value1\"")
+                    .contains("\"key2\":\"value2\"");
         }
 
         @Test
@@ -94,12 +97,14 @@ class JacksonSerializerTest {
             byte[] result = serializer.serialize(event);
 
             String json = new String(result, StandardCharsets.UTF_8);
-            assertThat(json).contains("2024-01-15T10:30:00Z");
-            assertThat(json).contains("2024-01-15");
+            assertThat(json)
+                    .contains("2024-01-15T10:30:00Z")
+                    .contains("2024-01-15");
         }
 
         @Test
         @DisplayName("rejects null value")
+        @SuppressWarnings("DataFlowIssue") // intentionally passing null to test rejection
         void rejectsNullValue() {
             assertThatThrownBy(() -> serializer.serialize(null))
                     .isInstanceOf(NullPointerException.class)
@@ -169,6 +174,7 @@ class JacksonSerializerTest {
 
         @Test
         @DisplayName("rejects null data")
+        @SuppressWarnings("DataFlowIssue") // intentionally passing null to test rejection
         void rejectsNullData() {
             assertThatThrownBy(() -> serializer.deserialize(null, TestEvent.class))
                     .isInstanceOf(NullPointerException.class);
@@ -176,6 +182,7 @@ class JacksonSerializerTest {
 
         @Test
         @DisplayName("rejects null type")
+        @SuppressWarnings("DataFlowIssue") // intentionally passing null to test rejection
         void rejectsNullType() {
             byte[] data = "{}".getBytes(StandardCharsets.UTF_8);
 
@@ -241,6 +248,7 @@ class JacksonSerializerTest {
 
         @Test
         @DisplayName("create(ObjectMapper) rejects null")
+        @SuppressWarnings("DataFlowIssue") // intentionally passing null to test rejection
         void createRejectsNull() {
             assertThatThrownBy(() -> JacksonSerializer.create(null))
                     .isInstanceOf(NullPointerException.class);
@@ -254,8 +262,9 @@ class JacksonSerializerTest {
 
             String json = new String(s.serialize(event), StandardCharsets.UTF_8);
 
-            assertThat(json).contains("\n");
-            assertThat(json).contains("  ");
+            assertThat(json)
+                    .contains("\n")
+                    .contains("  ");
         }
     }
 

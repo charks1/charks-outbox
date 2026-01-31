@@ -3,7 +3,6 @@ package xyz.charks.outbox.opentelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import xyz.charks.outbox.broker.BrokerConnector;
 import xyz.charks.outbox.broker.PublishResult;
 import xyz.charks.outbox.core.OutboxEvent;
