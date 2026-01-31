@@ -74,51 +74,55 @@ class OutboxEventTest {
 
     @Test
     void shouldRejectMissingAggregateType() {
-        assertThatThrownBy(() -> OutboxEvent.builder()
+        var builder = OutboxEvent.builder()
                 .aggregateId("123")
                 .eventType("Event")
                 .topic("topic")
-                .payload(new byte[0])
-                .build())
+                .payload(new byte[0]);
+
+        assertThatThrownBy(builder::build)
                 .isInstanceOf(NullPointerException.class)
                 .hasMessageContaining("Aggregate type");
     }
 
     @Test
     void shouldRejectBlankAggregateType() {
-        assertThatThrownBy(() -> OutboxEvent.builder()
+        var builder = OutboxEvent.builder()
                 .aggregateType("  ")
                 .aggregateId("123")
                 .eventType("Event")
                 .topic("topic")
-                .payload(new byte[0])
-                .build())
+                .payload(new byte[0]);
+
+        assertThatThrownBy(builder::build)
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Aggregate type cannot be blank");
     }
 
     @Test
     void shouldRejectMissingTopic() {
-        assertThatThrownBy(() -> OutboxEvent.builder()
+        var builder = OutboxEvent.builder()
                 .aggregateType("Order")
                 .aggregateId("123")
                 .eventType("Event")
-                .payload(new byte[0])
-                .build())
+                .payload(new byte[0]);
+
+        assertThatThrownBy(builder::build)
                 .isInstanceOf(NullPointerException.class)
                 .hasMessageContaining("Topic");
     }
 
     @Test
     void shouldRejectNegativeRetryCount() {
-        assertThatThrownBy(() -> OutboxEvent.builder()
+        var builder = OutboxEvent.builder()
                 .aggregateType("Order")
                 .aggregateId("123")
                 .eventType("Event")
                 .topic("topic")
                 .payload(new byte[0])
-                .retryCount(-1)
-                .build())
+                .retryCount(-1);
+
+        assertThatThrownBy(builder::build)
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Retry count cannot be negative");
     }
@@ -151,7 +155,10 @@ class OutboxEventTest {
                 .header("key", "value")
                 .build();
 
-        assertThatThrownBy(() -> event.headers().put("new", "value"))
+        Map<String, String> headers = event.headers();
+
+        // Intentional mutation attempt to verify immutability
+        assertThatThrownBy(() -> headers.put("new", "value"))
                 .isInstanceOf(UnsupportedOperationException.class);
     }
 

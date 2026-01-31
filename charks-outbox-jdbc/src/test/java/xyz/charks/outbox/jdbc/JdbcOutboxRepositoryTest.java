@@ -63,6 +63,7 @@ class JdbcOutboxRepositoryTest {
 
         @Test
         @DisplayName("throws exception for null dataSource")
+        @SuppressWarnings("DataFlowIssue")
         void nullDataSource() {
             assertThatThrownBy(() -> new JdbcOutboxRepository(null))
                     .isInstanceOf(NullPointerException.class)
@@ -71,6 +72,7 @@ class JdbcOutboxRepositoryTest {
 
         @Test
         @DisplayName("throws exception for null config")
+        @SuppressWarnings("DataFlowIssue")
         void nullConfig() {
             assertThatThrownBy(() -> new JdbcOutboxRepository(dataSource, null))
                     .isInstanceOf(NullPointerException.class)
@@ -84,6 +86,7 @@ class JdbcOutboxRepositoryTest {
 
         @Test
         @DisplayName("throws exception for null event")
+        @SuppressWarnings("DataFlowIssue")
         void nullEvent() {
             assertThatThrownBy(() -> repository.save(null))
                     .isInstanceOf(NullPointerException.class)
@@ -122,6 +125,7 @@ class JdbcOutboxRepositoryTest {
 
         @Test
         @DisplayName("throws exception for null list")
+        @SuppressWarnings("DataFlowIssue")
         void nullList() {
             assertThatThrownBy(() -> repository.saveAll(null))
                     .isInstanceOf(NullPointerException.class)
@@ -140,8 +144,9 @@ class JdbcOutboxRepositoryTest {
         @DisplayName("wraps SQLException in OutboxPersistenceException")
         void wrapsSqlException() throws SQLException {
             when(dataSource.getConnection()).thenThrow(new SQLException("Connection failed"));
+            List<OutboxEvent> events = List.of(createTestEvent());
 
-            assertThatThrownBy(() -> repository.saveAll(List.of(createTestEvent())))
+            assertThatThrownBy(() -> repository.saveAll(events))
                     .isInstanceOf(OutboxPersistenceException.class)
                     .hasMessageContaining("Failed to save")
                     .hasCauseInstanceOf(SQLException.class);
@@ -167,6 +172,7 @@ class JdbcOutboxRepositoryTest {
 
         @Test
         @DisplayName("throws exception for null id")
+        @SuppressWarnings("DataFlowIssue")
         void nullId() {
             assertThatThrownBy(() -> repository.findById(null))
                     .isInstanceOf(NullPointerException.class)
@@ -177,8 +183,9 @@ class JdbcOutboxRepositoryTest {
         @DisplayName("wraps SQLException in OutboxPersistenceException")
         void wrapsSqlException() throws SQLException {
             when(dataSource.getConnection()).thenThrow(new SQLException("Connection failed"));
+            OutboxEventId eventId = OutboxEventId.generate();
 
-            assertThatThrownBy(() -> repository.findById(OutboxEventId.generate()))
+            assertThatThrownBy(() -> repository.findById(eventId))
                     .isInstanceOf(OutboxPersistenceException.class)
                     .hasMessageContaining("Failed to find")
                     .hasCauseInstanceOf(SQLException.class);
@@ -270,8 +277,9 @@ class JdbcOutboxRepositoryTest {
             when(preparedStatement.executeQuery()).thenReturn(resultSet);
             when(resultSet.next()).thenReturn(true);
             setupResultSetMocks(eventId, "UNKNOWN", now, null, null);
+            OutboxEventId outboxEventId = new OutboxEventId(eventId);
 
-            assertThatThrownBy(() -> repository.findById(new OutboxEventId(eventId)))
+            assertThatThrownBy(() -> repository.findById(outboxEventId))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("Unknown status: UNKNOWN");
         }
@@ -328,6 +336,7 @@ class JdbcOutboxRepositoryTest {
 
         @Test
         @DisplayName("throws exception for null query")
+        @SuppressWarnings("DataFlowIssue")
         void nullQuery() {
             assertThatThrownBy(() -> repository.find(null))
                     .isInstanceOf(NullPointerException.class)
@@ -338,8 +347,9 @@ class JdbcOutboxRepositoryTest {
         @DisplayName("wraps SQLException in OutboxPersistenceException")
         void wrapsSqlException() throws SQLException {
             when(dataSource.getConnection()).thenThrow(new SQLException("Connection failed"));
+            OutboxQuery query = OutboxQuery.pending(10);
 
-            assertThatThrownBy(() -> repository.find(OutboxQuery.pending(10)))
+            assertThatThrownBy(() -> repository.find(query))
                     .isInstanceOf(OutboxPersistenceException.class)
                     .hasMessageContaining("Failed to find")
                     .hasCauseInstanceOf(SQLException.class);
@@ -485,6 +495,7 @@ class JdbcOutboxRepositoryTest {
 
         @Test
         @DisplayName("throws exception for null event")
+        @SuppressWarnings("DataFlowIssue")
         void nullEvent() {
             assertThatThrownBy(() -> repository.update(null))
                     .isInstanceOf(NullPointerException.class)
@@ -572,16 +583,22 @@ class JdbcOutboxRepositoryTest {
 
         @Test
         @DisplayName("throws exception for null ids")
+        @SuppressWarnings("DataFlowIssue")
         void nullIds() {
-            assertThatThrownBy(() -> repository.updateStatus(null, Published.now()))
+            OutboxStatus status = Published.now();
+
+            assertThatThrownBy(() -> repository.updateStatus(null, status))
                     .isInstanceOf(NullPointerException.class)
                     .hasMessageContaining("IDs");
         }
 
         @Test
         @DisplayName("throws exception for null status")
+        @SuppressWarnings("DataFlowIssue")
         void nullStatus() {
-            assertThatThrownBy(() -> repository.updateStatus(List.of(), null))
+            List<OutboxEventId> ids = List.of();
+
+            assertThatThrownBy(() -> repository.updateStatus(ids, null))
                     .isInstanceOf(NullPointerException.class)
                     .hasMessageContaining("Status");
         }
@@ -598,8 +615,10 @@ class JdbcOutboxRepositoryTest {
         @DisplayName("wraps SQLException in OutboxPersistenceException")
         void wrapsSqlException() throws SQLException {
             when(dataSource.getConnection()).thenThrow(new SQLException("Connection failed"));
+            List<OutboxEventId> ids = List.of(OutboxEventId.generate());
+            OutboxStatus status = Published.now();
 
-            assertThatThrownBy(() -> repository.updateStatus(List.of(OutboxEventId.generate()), Published.now()))
+            assertThatThrownBy(() -> repository.updateStatus(ids, status))
                     .isInstanceOf(OutboxPersistenceException.class)
                     .hasMessageContaining("Failed to update status")
                     .hasCauseInstanceOf(SQLException.class);
@@ -626,6 +645,7 @@ class JdbcOutboxRepositoryTest {
 
         @Test
         @DisplayName("throws exception for null id")
+        @SuppressWarnings("DataFlowIssue")
         void nullId() {
             assertThatThrownBy(() -> repository.deleteById(null))
                     .isInstanceOf(NullPointerException.class)
@@ -636,8 +656,9 @@ class JdbcOutboxRepositoryTest {
         @DisplayName("wraps SQLException in OutboxPersistenceException")
         void wrapsSqlException() throws SQLException {
             when(dataSource.getConnection()).thenThrow(new SQLException("Connection failed"));
+            OutboxEventId eventId = OutboxEventId.generate();
 
-            assertThatThrownBy(() -> repository.deleteById(OutboxEventId.generate()))
+            assertThatThrownBy(() -> repository.deleteById(eventId))
                     .isInstanceOf(OutboxPersistenceException.class)
                     .hasMessageContaining("Failed to delete")
                     .hasCauseInstanceOf(SQLException.class);
@@ -672,6 +693,7 @@ class JdbcOutboxRepositoryTest {
 
         @Test
         @DisplayName("throws exception for null query")
+        @SuppressWarnings("DataFlowIssue")
         void nullQuery() {
             assertThatThrownBy(() -> repository.delete(null))
                     .isInstanceOf(NullPointerException.class)
@@ -682,8 +704,9 @@ class JdbcOutboxRepositoryTest {
         @DisplayName("wraps SQLException in OutboxPersistenceException")
         void wrapsSqlException() throws SQLException {
             when(dataSource.getConnection()).thenThrow(new SQLException("Connection failed"));
+            OutboxQuery query = OutboxQuery.pending(10);
 
-            assertThatThrownBy(() -> repository.delete(OutboxQuery.pending(10)))
+            assertThatThrownBy(() -> repository.delete(query))
                     .isInstanceOf(OutboxPersistenceException.class)
                     .hasMessageContaining("Failed to delete")
                     .hasCauseInstanceOf(SQLException.class);

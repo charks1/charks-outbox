@@ -97,18 +97,23 @@ class OutboxQueryTest {
 
     @Test
     void shouldRejectNonPositiveLimit() {
-        assertThatThrownBy(() -> OutboxQuery.builder().limit(0).build())
+        var zeroLimitBuilder = OutboxQuery.builder().limit(0);
+        var negativeLimitBuilder = OutboxQuery.builder().limit(-1);
+
+        assertThatThrownBy(zeroLimitBuilder::build)
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Limit must be positive");
 
-        assertThatThrownBy(() -> OutboxQuery.builder().limit(-1).build())
+        assertThatThrownBy(negativeLimitBuilder::build)
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Limit must be positive");
     }
 
     @Test
     void shouldRejectNegativeMaxRetryCount() {
-        assertThatThrownBy(() -> OutboxQuery.builder().maxRetryCount(-1).build())
+        var builder = OutboxQuery.builder().maxRetryCount(-1);
+
+        assertThatThrownBy(builder::build)
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Max retry count cannot be negative");
     }
@@ -118,8 +123,9 @@ class OutboxQueryTest {
         OutboxQuery query = OutboxQuery.builder()
                 .aggregateTypes(Set.of("Order"))
                 .build();
+        Set<String> aggregateTypes = query.aggregateTypes();
 
-        assertThatThrownBy(() -> query.aggregateTypes().add("Customer"))
+        assertThatThrownBy(() -> aggregateTypes.add("Customer"))
                 .isInstanceOf(UnsupportedOperationException.class);
     }
 
@@ -128,8 +134,9 @@ class OutboxQueryTest {
         OutboxQuery query = OutboxQuery.builder()
                 .topics(Set.of("orders"))
                 .build();
+        Set<String> topics = query.topics();
 
-        assertThatThrownBy(() -> query.topics().add("customers"))
+        assertThatThrownBy(() -> topics.add("customers"))
                 .isInstanceOf(UnsupportedOperationException.class);
     }
 
@@ -145,7 +152,6 @@ class OutboxQueryTest {
                 .limit(50)
                 .build();
 
-        assertThat(query1).isEqualTo(query2);
-        assertThat(query1.hashCode()).isEqualTo(query2.hashCode());
+        assertThat(query1).isEqualTo(query2).hasSameHashCodeAs(query2);
     }
 }
